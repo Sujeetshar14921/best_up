@@ -1,0 +1,538 @@
+# BestUp System Architecture Diagram
+
+## 1. High-Level System Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CLIENT (Frontend)                            │
+│                    (React/Vue/Mobile App)                            │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓ ↑
+                        HTTP/REST API
+         ┌──────────────────────┼──────────────────────┐
+         ↓                      ↓                      ↓
+    GET /phones         GET /recommend          GET /compare
+   (List phones)      (Get best phones)      (Compare phones)
+         ↓                      ↓                      ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │                   EXPRESS.JS SERVER                          │
+    │              (backend/server.js)                             │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐  │
+    │  │  ROUTING LAYER (phoneRoutes.js)                     │  │
+    │  │  - GET /api/phones                                  │  │
+    │  │  - GET /api/phones/recommend                        │  │
+    │  │  - GET /api/phones/compare                          │  │
+    │  │  - GET /api/phones/:slug                            │  │
+    │  │  - POST/PUT/DELETE /api/phones/:slug                │  │
+    │  └──────────────────────────────────────────────────────┘  │
+    │                      ↓                                       │
+    │  ┌──────────────────────────────────────────────────────┐  │
+    │  │  CONTROLLER LAYER (phoneController.js)              │  │
+    │  │  - getPhones()          → List with filters         │  │
+    │  │  - recommendPhones()    → Smart algorithm           │  │
+    │  │  - comparePhones()      → Compare multiple          │  │
+    │  │  - getPhoneBySlug()     → Get single phone          │  │
+    │  │  - createPhone()        → Add new phone             │  │
+    │  │  - updatePhone()        → Edit phone                │  │
+    │  │  - deletePhone()        → Remove phone              │  │
+    │  └──────────────────────────────────────────────────────┘  │
+    │                      ↓                                       │
+    │  ┌──────────────────────────────────────────────────────┐  │
+    │  │  MIDDLEWARE LAYER                                   │  │
+    │  │  ┌────────────────────────────────────────────────┐ │  │
+    │  │  │ asyncHandler.js                                │ │  │
+    │  │  │ → Wraps async functions in try-catch          │ │  │
+    │  │  │ → Catches errors automatically                │ │  │
+    │  │  └────────────────────────────────────────────────┘ │  │
+    │  │  ┌────────────────────────────────────────────────┐ │  │
+    │  │  │ errorMiddleware.js                             │ │  │
+    │  │  │ → Global error handler                         │ │  │
+    │  │  │ → Formats errors as JSON                       │ │  │
+    │  │  │ → Returns proper status codes                  │ │  │
+    │  │  └────────────────────────────────────────────────┘ │  │
+    │  └──────────────────────────────────────────────────────┘  │
+    │                      ↓                                       │
+    │  ┌──────────────────────────────────────────────────────┐  │
+    │  │  MODEL LAYER (Phone.js)                             │  │
+    │  │  ┌────────────────────────────────────────────────┐ │  │
+    │  │  │  SCHEMA DEFINITION                            │ │  │
+    │  │  │  - name, brand, slug, basePrice              │ │  │
+    │  │  │  - specs (performance, display, camera, etc) │ │  │
+    │  │  │  - variants (RAM/Storage combos)             │ │  │
+    │  │  │  - scores (pre-calculated ratings)           │ │  │
+    │  │  └────────────────────────────────────────────────┘ │  │
+    │  │  ┌────────────────────────────────────────────────┐ │  │
+    │  │  │  INSTANCE METHODS                             │ │  │
+    │  │  │  - calculateGamingScore()                     │ │  │
+    │  │  │  - calculateCameraScore()                     │ │  │
+    │  │  │  - calculateBatteryScore()                    │ │  │
+    │  │  │  - calculateValueScore()                      │ │  │
+    │  │  │  - toJSON() → Format response                 │ │  │
+    │  │  └────────────────────────────────────────────────┘ │  │
+    │  │  ┌────────────────────────────────────────────────┐ │  │
+    │  │  │  STATIC METHODS                               │ │  │
+    │  │  │  - getRecommendations()                       │ │  │
+    │  │  │  - comparePhones()                            │ │  │
+    │  │  │  - advancedFilter()                           │ │  │
+    │  │  │  - determineWinners()                         │ │  │
+    │  │  └────────────────────────────────────────────────┘ │  │
+    │  └──────────────────────────────────────────────────────┘  │
+    │                      ↓                                       │
+    │  ┌──────────────────────────────────────────────────────┐  │
+    │  │  DATABASE QUERY                                     │  │
+    │  │  MongoDB Aggregation Pipeline / Find Query          │  │
+    │  └──────────────────────────────────────────────────────┘  │
+    └─────────────────────────────────────────────────────────────┘
+                              ↓
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    MONGODB DATABASE                         │
+    │                                                             │
+    │  ┌──────────────────────────────────────────────────────┐ │
+    │  │  PHONES COLLECTION                                  │ │
+    │  │                                                      │ │
+    │  │  Indexes:                                           │ │
+    │  │  - brand (ascending)                               │ │
+    │  │  - basePrice (ascending)                           │ │
+    │  │  - scores.gaming (descending)                      │ │
+    │  │  - scores.camera (descending)                      │ │
+    │  │  - scores.valueForMoney (descending)               │ │
+    │  │  - Full-text: name, brand, slug                    │ │
+    │  │                                                      │ │
+    │  │  Documents:                                         │ │
+    │  │  ├─ iPhone 16 Pro Max                              │ │
+    │  │  ├─ OnePlus 13                                     │ │
+    │  │  ├─ Samsung Galaxy S24 Ultra                       │ │
+    │  │  ├─ Google Pixel 9 Pro XL                          │ │
+    │  │  └─ ... (more phones)                              │ │
+    │  └──────────────────────────────────────────────────────┘ │
+    └─────────────────────────────────────────────────────────────┘
+                              ↑
+                    Returns JSON Document
+                              ↓
+                    Format & Send Response
+                              ↓
+                    Client Receives JSON
+```
+
+---
+
+## 2. Request/Response Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  CLIENT REQUEST                                                 │
+│  GET /api/phones/recommend?budget=25000&priority=Gaming         │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  ROUTE HANDLER                                                  │
+│  phoneRoutes.js detects pattern: /recommend                     │
+│  Routes to: recommendPhones controller                          │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  CONTROLLER - recommendPhones()                                 │
+│                                                                 │
+│  1. Extract query params:                                       │
+│     budget = 25000                                              │
+│     priority = "Gaming"                                         │
+│                                                                 │
+│  2. Validate input:                                             │
+│     if (!budget) throw Error                                    │
+│     if (!priority) throw Error                                  │
+│                                                                 │
+│  3. Call Model method:                                          │
+│     Phone.getRecommendations({ budget, priority })             │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  MODEL - Phone.getRecommendations()                             │
+│                                                                 │
+│  Execute MongoDB Aggregation Pipeline:                          │
+│                                                                 │
+│  $match:                                                        │
+│    Find phones where variants.price <= 25000                   │
+│                                                                 │
+│  $addFields:                                                    │
+│    Add computed fields (min price, etc)                        │
+│                                                                 │
+│  $sort:                                                         │
+│    Sort by scores.gaming (descending)                          │
+│    Because priority = "Gaming"                                 │
+│                                                                 │
+│  $limit: 5                                                      │
+│    Return only top 5 phones                                    │
+│                                                                 │
+│  $project:                                                      │
+│    Select only needed fields                                   │
+│    Exclude sensitive data                                      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  DATABASE QUERY EXECUTION                                       │
+│                                                                 │
+│  MongoDB scans phones collection:                               │
+│                                                                 │
+│  Collection: phones                                             │
+│  ├─ Query Index: variants.price                                │
+│  ├─ Fast Lookup: Documents where price <= 25000               │
+│  ├─ Sort by Index: scores.gaming                              │
+│  ├─ Return: Top 5 documents                                   │
+│  └─ Transfer: JSON over network                               │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  RETURNED DATA FROM DATABASE                                    │
+│                                                                 │
+│  [                                                              │
+│    {                                                            │
+│      _id: "...",                                                │
+│      name: "OnePlus 13",                                        │
+│      scores: { gaming: 8.9, camera: 7.8, ... },               │
+│      ...                                                        │
+│    },                                                           │
+│    ... (4 more phones)                                          │
+│  ]                                                              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  CONTROLLER - Format Response                                   │
+│                                                                 │
+│  Wrap in JSON object:                                           │
+│  {                                                              │
+│    success: true,                                               │
+│    count: 5,                                                    │
+│    budget: 25000,                                               │
+│    priority: "Gaming",                                          │
+│    data: [ ... ]                                                │
+│  }                                                              │
+│                                                                 │
+│  Add status code: 200 OK                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  ERROR HANDLING (if error occurs)                               │
+│                                                                 │
+│  1. Error thrown in any layer                                   │
+│  2. asyncHandler catches it                                     │
+│  3. Passes to errorMiddleware                                   │
+│  4. errorMiddleware formats error:                              │
+│     {                                                           │
+│       success: false,                                           │
+│       error: "Error message",                                   │
+│       statusCode: 400/500                                       │
+│     }                                                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  SEND RESPONSE TO CLIENT                                        │
+│                                                                 │
+│  HTTP/1.1 200 OK                                                │
+│  Content-Type: application/json                                 │
+│  Content-Length: 2048                                           │
+│                                                                 │
+│  {                                                              │
+│    "success": true,                                             │
+│    "count": 5,                                                  │
+│    "budget": 25000,                                             │
+│    "priority": "Gaming",                                        │
+│    "data": [                                                    │
+│      {                                                          │
+│        "_id": "507f1f77bcf86cd799439011",                      │
+│        "name": "OnePlus 13",                                    │
+│        "brand": "OnePlus",                                      │
+│        "scores": {                                              │
+│          "gaming": 8.9,                                         │
+│          "camera": 7.8,                                         │
+│          "battery": 8.2                                         │
+│        },                                                       │
+│        "recommendationReason": "Best for gaming with..."       │
+│      },                                                         │
+│      ...                                                        │
+│    ]                                                            │
+│  }                                                              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+                    CLIENT RECEIVES JSON
+```
+
+---
+
+## 3. Data Flow Diagram
+
+```
+                    GAMING RECOMMENDATION
+                                │
+                                ↓
+                    ┌──────────────────────┐
+                    │   User Budget: ₹25k  │
+                    │   Priority: Gaming    │
+                    └──────────────────────┘
+                                │
+                                ↓
+                    ┌──────────────────────────────────┐
+                    │ FILTER by Budget                 │
+                    │ Query: variants.price <= 25000   │
+                    └──────────────────────────────────┘
+                                │
+                    ┌───────────┴───────────┐
+                    ↓                       ↓
+              Found 24 phones        Price index used
+                    │                     │
+                    └─────────────────────┘
+                                │
+                                ↓
+            ┌───────────────────────────────────────┐
+            │ SCORE each phone for Gaming           │
+            │                                       │
+            │ Gaming Score =                        │
+            │  (AnTuTu/2.5M × 0.40) +              │
+            │  (RefreshRate/144 × 0.30) +          │
+            │  (TouchSampling/720 × 0.20) +        │
+            │  (HasCooling × 0.10)                 │
+            └───────────────────────────────────────┘
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        ↓                       ↓                       ↓
+    OnePlus 13            Samsung S24          iPhone 16
+    Gaming: 8.9          Gaming: 8.1           Gaming: 7.8
+    Price: ₹24,999       Price: ₹27,999        Price: ₹29,999
+        │                   │                       │
+        └───────────────────┼───────────────────────┘
+                            │
+                            ↓
+            ┌──────────────────────────────┐
+            │ SORT by Gaming Score         │
+            │ (Descending)                 │
+            └──────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        ↓                   ↓                   ↓
+    1. OnePlus 13      2. Samsung S24      3. iPhone 16
+    (8.9)              (8.1)               (7.8)
+        │                   │                   │
+        └───────────────────┼───────────────────┘
+                            │
+                            ↓
+            ┌──────────────────────────────┐
+            │ RETURN Top 5                 │
+            │ (We have 3, all returned)    │
+            └──────────────────────────────┘
+                            │
+                            ↓
+            ┌──────────────────────────────┐
+            │ FORMAT RESPONSE              │
+            │ Add metadata                 │
+            │ Add recommendations reasons  │
+            └──────────────────────────────┘
+                            │
+                            ↓
+                    CLIENT RECEIVES
+                   [Top 3 Gaming Phones]
+```
+
+---
+
+## 4. Scoring Algorithm Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  GAMING SCORE CALCULATION                                       │
+│                                                                 │
+│  Input Phone: OnePlus 13                                        │
+│  Specs:                                                         │
+│    - AnTuTu: 2,100,000                                         │
+│    - Refresh Rate: 120 Hz                                      │
+│    - Touch Sampling: 720 Hz                                    │
+│    - Cooling: VC Cooling (Yes)                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+                          ↓
+
+    NORMALIZE EACH METRIC TO 0-1 RANGE
+
+    AnTuTu Norm = 2,100,000 / 2,500,000 = 0.84
+    RefreshRate Norm = 120 / 144 = 0.83
+    TouchSampling Norm = 720 / 720 = 1.0
+    Cooling Bonus = 1 (has VC cooling)
+
+                          ↓
+
+    APPLY WEIGHTS
+
+    Gaming Score = (
+        0.84 × 0.40 +  →  0.336  (AnTuTu weight)
+        0.83 × 0.30 +  →  0.249  (Display weight)
+        1.0  × 0.20 +  →  0.200  (Touch weight)
+        1.0  × 0.10    →  0.100  (Cooling weight)
+    ) × 10
+
+                          ↓
+
+    CALCULATE
+
+    Score = (0.336 + 0.249 + 0.200 + 0.100) × 10
+    Score = 0.885 × 10
+    Score = 8.85
+    
+    Rounded to 1 decimal = 8.9
+
+                          ↓
+
+    STORE IN DATABASE
+    scores.gaming = 8.9
+```
+
+---
+
+## 5. Comparison Flow
+
+```
+INPUT: Compare iPhone 16, OnePlus 13, Samsung S24
+
+            ├─ iPhone 16 Pro
+            ├─ OnePlus 13
+            └─ Samsung S24 Ultra
+
+                    ↓
+
+    FETCH all phones from database
+
+    ┌──────────────────────┬──────────────────────┬──────────────────────┐
+    │   iPhone 16 Pro      │   OnePlus 13         │   Samsung S24 Ultra  │
+    ├──────────────────────┼──────────────────────┼──────────────────────┤
+    │ Price: ₹159,999      │ Price: ₹45,999       │ Price: ₹129,999      │
+    │ Gaming: 7.8          │ Gaming: 8.9 ✓ WIN    │ Gaming: 8.1          │
+    │ Camera: 9.1 ✓ WIN    │ Camera: 7.8          │ Camera: 8.5          │
+    │ Battery: 7.5         │ Battery: 8.2 ✓ WIN   │ Battery: 8.0         │
+    │ Value: 6.2           │ Value: 8.5 ✓ WIN     │ Value: 7.2           │
+    └──────────────────────┴──────────────────────┴──────────────────────┘
+
+                    ↓
+
+    DETERMINE WINNERS
+
+    {
+      "gaming": { name: "OnePlus 13", score: 8.9 },
+      "camera": { name: "iPhone 16 Pro", score: 9.1 },
+      "battery": { name: "OnePlus 13", score: 8.2 },
+      "valueForMoney": { name: "OnePlus 13", score: 8.5 }
+    }
+
+                    ↓
+
+    RETURN COMPARISON DATA
+
+    {
+      winner: { gaming, camera, battery, valueForMoney },
+      phones: [ ...normalized specs... ],
+      recommendation: "Best value: OnePlus 13 at ₹45,999"
+    }
+```
+
+---
+
+## 6. Error Handling Flow
+
+```
+REQUEST RECEIVED
+        │
+        ↓
+    TRY to process
+        │
+        ├─ Success? ───→ Return JSON 200 OK
+        │
+        └─ Error? ───→ Throw Error
+                        │
+                        ↓
+            asyncHandler catches error
+                        │
+                        ↓
+            Passes to next(error)
+                        │
+                        ↓
+            errorMiddleware processes:
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+    Mongoose       JWT             Custom
+    Error?         Error?          Error?
+        │               │               │
+        ↓               ↓               ↓
+    Set 422/409     Set 401         Set 400/500
+        │               │               │
+        └───────────────┼───────────────┘
+                        │
+                        ↓
+            FORMAT ERROR RESPONSE:
+            {
+              success: false,
+              error: "Error message",
+              statusCode: 400,
+              stack: (dev only)
+            }
+                        │
+                        ↓
+            SEND to Client with status code
+```
+
+---
+
+## 7. Database Index Strategy
+
+```
+PHONES COLLECTION
+
+    ┌─────────────────────────────────────────────┐
+    │  INDEX STRUCTURE                            │
+    ├─────────────────────────────────────────────┤
+    │                                             │
+    │  Single Field Indexes:                      │
+    │  ┌─────────────────────────────────────┐   │
+    │  │ brand: 1 (ascending)                │   │
+    │  │ → Fast filtering by brand           │   │
+    │  │ → Example: Find Samsung phones      │   │
+    │  └─────────────────────────────────────┘   │
+    │                                             │
+    │  ┌─────────────────────────────────────┐   │
+    │  │ basePrice: 1 (ascending)            │   │
+    │  │ → Fast range queries                │   │
+    │  │ → Example: price <= 50000           │   │
+    │  └─────────────────────────────────────┘   │
+    │                                             │
+    │  ┌─────────────────────────────────────┐   │
+    │  │ scores.gaming: -1 (descending)      │   │
+    │  │ → Fast sorting by gaming score      │   │
+    │  │ → Example: Top gaming phones        │   │
+    │  └─────────────────────────────────────┘   │
+    │                                             │
+    │  Text Indexes:                              │
+    │  ┌─────────────────────────────────────┐   │
+    │  │ name, brand, slug: text             │   │
+    │  │ → Full-text search capability       │   │
+    │  │ → Example: search("gaming camera")  │   │
+    │  └─────────────────────────────────────┘   │
+    │                                             │
+    └─────────────────────────────────────────────┘
+
+    QUERY EXECUTION COMPARISON:
+
+    WITHOUT Index:      WITH Index:
+    ┌──────────────┐    ┌──────────────┐
+    │ Scan all     │    │ Use index    │
+    │ 1000 docs    │    │ Binary search│
+    │ Check each   │    │ Return match │
+    │ ~1000ms ❌   │    │ ~1ms ✅      │
+    └──────────────┘    └──────────────┘
+```
+
+---
+
+This architecture is built for:
+- ✅ Fast queries with indexing
+- ✅ Complex scoring algorithms
+- ✅ Real-time recommendations
+- ✅ Scalable to millions of phones
+- ✅ Clean error handling
+- ✅ Easy to extend with new features
