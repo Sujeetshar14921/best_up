@@ -12,10 +12,29 @@ const asyncHandler = require('../middleware/asyncHandler');
 const getPhones = asyncHandler(async (req, res) => {
   const { brand, search, isUpcoming, limit = 10, skip = 0, sort = '-createdAt' } = req.query;
 
+  console.log('🔍 getPhones called with:', { brand, search, isUpcoming, limit, skip });
+
   // Build query object
   const query = {};
-  if (brand) query.brand = brand;
-  if (search) query.$text = { $search: search };
+  
+  // Brand filter - case-insensitive
+  if (brand) {
+    query.brand = { $regex: brand, $options: 'i' };
+    console.log('🔎 Brand filter applied:', query.brand);
+  }
+  
+  // Search filter - improved to handle both text search and regex
+  if (search) {
+    // Use regex to match partial text in name, brand, or overview
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { brand: { $regex: search, $options: 'i' } },
+      { overview: { $regex: search, $options: 'i' } }
+    ];
+    console.log('🔎 Search filter applied for:', search);
+  }
+  
+  // Upcoming filter
   if (isUpcoming === 'true') query.isUpcoming = true;
   if (isUpcoming === 'false') query.isUpcoming = false;
 
@@ -37,6 +56,8 @@ const getPhones = asyncHandler(async (req, res) => {
     };
   }
 
+  console.log('📋 Final query:', JSON.stringify(query, null, 2));
+
   // Execute query with pagination
   const total = await Phone.countDocuments(query);
   const phones = await Phone.find(query)
@@ -44,6 +65,8 @@ const getPhones = asyncHandler(async (req, res) => {
     .skip(Number(skip))
     .sort(sort)
     .select('name brand basePrice specs scores variants overview imageId slug isUpcoming launchDate');
+
+  console.log(`✅ Found ${phones.length} phones out of ${total} total`);
 
   res.status(200).json({
     success: true,

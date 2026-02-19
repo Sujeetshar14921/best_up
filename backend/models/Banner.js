@@ -11,9 +11,17 @@ const bannerSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    imageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null
+    },
+    imageName: {
+      type: String,
+      default: null
+    },
     imageUrl: {
       type: String,
-      required: true
+      default: null
     },
     linkUrl: {
       type: String,

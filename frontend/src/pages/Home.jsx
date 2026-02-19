@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowRight, Zap, Smartphone, TrendingUp, Star, Sparkles, Clock } from 'lucide-react'
 import { usePhones } from '../context/PhoneContext'
 import PhoneCard from '../components/PhoneCard'
@@ -9,6 +9,7 @@ import axios from 'axios'
 
 export default function Home() {
   const { phones, loading, error, fetchPhones } = usePhones()
+  const navigate = useNavigate()
   const scrollContainerRef = useRef(null)
   const brandScrollRef = useRef(null)
   const upcomingScrollRef = useRef(null)
@@ -67,7 +68,7 @@ export default function Home() {
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900">Featured Mobile Brands</h2>
               <Link 
                 to="/phones"
-                className="text-lg font-semibold text-blue-600 hover:text-green-500 flex items-center gap-2 transition-colors"
+                className="text-lg font-semibold text-yellow-600 hover:text-orange-600 flex items-center gap-2 transition-colors"
               >
                 View All
                 <ChevronRight size={24} />
@@ -75,17 +76,18 @@ export default function Home() {
             </div>
 
             {/* Brands Carousel with Scroll Buttons */}
-            <div className="relative">
+            <div className="relative overflow-visible">
               <div
                 ref={brandScrollRef}
-                className="flex gap-6 overflow-x-auto scroll-smooth pb-6 scrollbar-hide"
+                className="flex gap-6 overflow-x-auto scroll-smooth py-8 px-2 scrollbar-hide"
               >
                 {brands.map((brand) => (
                   <div
                     key={brand._id}
+                    onClick={() => navigate(`/phones?brand=${encodeURIComponent(brand.name)}`)}
                     className="flex-shrink-0 group cursor-pointer text-center"
                   >
-                    <div className="w-40 h-40 bg-gray-50 rounded-2xl border-2 border-gray-100 shadow-sm hover:shadow-lg hover:border-gray-200 transition-all duration-300 flex items-center justify-center group-hover:scale-105 hover:-translate-y-1 mb-4">
+                    <div className="w-40 h-40 bg-gray-50 rounded-2xl border-2 border-gray-100 shadow-sm hover:shadow-lg hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group-hover:scale-105 hover:-translate-y-1 mb-4">
                       <img 
                         src={brand.logo} 
                         alt={brand.name}
@@ -95,7 +97,7 @@ export default function Home() {
                         }}
                       />
                     </div>
-                    <p className="text-gray-700 font-semibold text-base group-hover:text-blue-600 transition-colors line-clamp-1">{brand.name}</p>
+                    <p className="text-gray-700 font-semibold text-base group-hover:text-yellow-600 transition-colors line-clamp-1">{brand.name}</p>
                   </div>
                 ))}
               </div>
@@ -129,13 +131,13 @@ export default function Home() {
           </div>
 
           <LoadingError loading={loading} error={error}>
-            <div className="relative">
+            <div className="relative overflow-visible">
               <div
                 ref={scrollContainerRef}
-                className="flex gap-6 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+                className="flex gap-6 overflow-x-auto scroll-smooth py-10 px-2 scrollbar-hide"
               >
                 {getFeaturedPhones().map((phone) => (
-                  <div key={phone._id} className="flex-shrink-0 w-56 transform transition-all duration-300 hover:scale-105">
+                  <div key={phone._id} className="flex-shrink-0 w-56 my-2">
                     <PhoneCard phone={phone} />
                   </div>
                 ))}
@@ -165,7 +167,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-block mb-4">
-                <span className="px-4 py-2 bg-yellow-100 text-blue-700 rounded-full text-sm font-semibold flex items-center gap-2 justify-center">
+                <span className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-full text-sm font-semibold flex items-center gap-2 justify-center">
                   <Sparkles size={18} />
                   Coming Soon
                 </span>
@@ -174,13 +176,13 @@ export default function Home() {
               <p className="text-gray-600 text-lg">Exciting new phones on the horizon</p>
             </div>
 
-            <div className="relative">
+            <div className="relative overflow-visible">
               <div
                 ref={upcomingScrollRef}
-                className="flex gap-6 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+                className="flex gap-6 overflow-x-auto scroll-smooth py-10 px-2 scrollbar-hide"
               >
                 {upcomingPhones.map((phone) => (
-                  <div key={phone._id} className="flex-shrink-0 w-56">
+                  <div key={phone._id} className="flex-shrink-0 w-56 my-2">
                     <UpcomingPhoneCard phone={phone} />
                   </div>
                 ))}
@@ -217,13 +219,13 @@ export default function Home() {
           </div>
 
           <LoadingError loading={loading} error={error}>
-            <div className="relative">
+            <div className="relative overflow-visible">
               <div
                 ref={scrollContainerRef}
-                className="flex gap-6 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+                className="flex gap-6 overflow-x-auto scroll-smooth py-10 px-2 scrollbar-hide"
               >
                 {getPopularPhones().map((phone) => (
-                  <div key={phone._id} className="flex-shrink-0 w-56 transform transition-all duration-300 hover:scale-105">
+                  <div key={phone._id} className="flex-shrink-0 w-56 my-2">
                     <PhoneCard phone={phone} />
                   </div>
                 ))}
@@ -261,13 +263,13 @@ export default function Home() {
           </div>
 
           <LoadingError loading={loading} error={error}>
-            <div className="relative">
+            <div className="relative overflow-visible">
               <div
                 ref={scrollContainerRef}
-                className="flex gap-6 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+                className="flex gap-6 overflow-x-auto scroll-smooth py-10 px-2 scrollbar-hide"
               >
                 {getLatestPhones().map((phone) => (
-                  <div key={phone._id} className="flex-shrink-0 w-56 transform transition-all duration-300 hover:scale-105">
+                  <div key={phone._id} className="flex-shrink-0 w-56 my-2">
                     <PhoneCard phone={phone} />
                   </div>
                 ))}
@@ -292,17 +294,17 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-green-500 text-white relative overflow-hidden">
+      <section className="py-20 px-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-orange-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute -top-96 -right-96 w-full h-full rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)' }}></div>
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-5xl font-bold mb-6">Find Your <span className="text-yellow-400">Best</span><span className="text-blue-600">Up</span> Phone</h2>
+          <h2 className="text-5xl font-bold mb-6">Find Your <span className="text-yellow-300">Best</span><span className="text-white">Up</span> Phone</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">Explore thousands of phones with detailed specs, ratings, and AI-powered recommendations</p>
           <Link
             to="/phones"
-            className="inline-flex items-center gap-2 px-10 py-4 bg-white text-blue-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 px-10 py-4 bg-white text-orange-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105"
           >
             <TrendingUp size={24} />
             Explore All Phones
@@ -319,24 +321,25 @@ function UpcomingPhoneCard({ phone }) {
   const daysUntilLaunch = launchDate ? Math.ceil((launchDate - new Date()) / (1000 * 60 * 60 * 24)) : null
 
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-gray-100 transition-all duration-300 transform hover:scale-105 h-full flex flex-col">
+    <div className="group bg-gradient-to-b from-gray-50 to-white rounded-2xl overflow-visible shadow-lg hover:shadow-2xl border border-gray-100 group-hover:border-yellow-400 transition-all duration-300 transform group-hover:scale-105 group-hover:-translate-y-2 h-full flex flex-col">
       {/* Image Container */}
-      <div className="relative bg-yellow-50 h-48 overflow-hidden flex items-center justify-center">
+      <div className="relative bg-gradient-to-b from-gray-50 to-white h-48 overflow-hidden flex items-center justify-center rounded-t-2xl">
         {phone.imageId ? (
           <img
             src={`http://localhost:5000/api/phones/admin/phones/${phone._id}/image`}
             alt={phone.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            style={{ display: 'block' }}
             onError={(e) => {
               e.target.style.display = 'none'
             }}
           />
         ) : (
-          <Smartphone size={64} className="text-gray-400" />
+          <Smartphone size={64} className="text-gray-400 group-hover:text-yellow-400 transition-colors duration-300" />
         )}
         
         {/* Coming Soon Badge */}
-        <div className="absolute top-3 right-3 bg-yellow-500 text-blue-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+        <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
           <Sparkles size={14} />
           Coming
         </div>
@@ -352,8 +355,8 @@ function UpcomingPhoneCard({ phone }) {
 
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col">
-        <p className="text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">{phone.brand}</p>
-        <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors">{phone.name}</h3>
+        <p className="text-yellow-600 text-xs font-bold uppercase tracking-wider mb-2 group-hover:text-orange-600 transition-colors duration-300">{phone.brand}</p>
+        <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-3 group-hover:text-yellow-600 transition-colors duration-300">{phone.name}</h3>
 
         {phone.overview && (
           <p className="text-gray-600 text-xs line-clamp-2 mb-4 flex-1">{phone.overview}</p>
@@ -367,8 +370,8 @@ function UpcomingPhoneCard({ phone }) {
         )}
 
         <Link
-          to={`/phones/${phone.slug}`}
-          className="inline-flex items-center justify-center gap-2 w-full py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all hover:scale-105"
+          to={`/phone/${phone.slug}`}
+          className="inline-flex items-center justify-center gap-2 w-full py-2 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all hover:scale-105"
         >
           View Details
           <ArrowRight size={16} />

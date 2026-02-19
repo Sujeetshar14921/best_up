@@ -1,25 +1,80 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Search, Filter, X } from 'lucide-react'
+import axios from 'axios'
 
-export default function FilterBar({ onFilterChange, onSearch }) {
+export default function FilterBar({ onFilterChange, onSearch, initialFilters = {}, initialSearch = '' }) {
   const [showFilters, setShowFilters] = useState(false)
+  const [allBrands, setAllBrands] = useState([])
   const [filters, setFilters] = useState({
-    brand: '',
-    priceMin: '',
-    priceMax: '',
-    ram: '',
-    sort: 'name'
+    brand: initialFilters.brand || '',
+    priceMin: initialFilters.priceMin || '',
+    priceMax: initialFilters.priceMax || '',
+    ram: initialFilters.ram || '',
+    sort: initialFilters.sort || 'name'
   })
+  const [searchInput, setSearchInput] = useState(initialSearch)
+  const filterTimeoutRef = useRef(null)
+  const searchTimeoutRef = useRef(null)
+
+  // Fetch brands on mount
+  useEffect(() => {
+    fetchBrandsData()
+  }, [])
+
+  // Update filters when initialFilters change
+  useEffect(() => {
+    setFilters({
+      brand: initialFilters.brand || '',
+      priceMin: initialFilters.priceMin || '',
+      priceMax: initialFilters.priceMax || '',
+      ram: initialFilters.ram || '',
+      sort: initialFilters.sort || 'name'
+    })
+  }, [initialFilters])
+
+  // Update search when initialSearch changes
+  useEffect(() => {
+    setSearchInput(initialSearch)
+  }, [initialSearch])
+
+  const fetchBrandsData = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/brands')
+      const brandNames = response.data.data?.map(b => b.name) || []
+      setAllBrands(brandNames)
+    } catch (err) {
+      console.error('Failed to fetch brands:', err)
+      setAllBrands(['OnePlus', 'iPhone', 'Samsung', 'Google', 'Xiaomi']) // Fallback
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
     const newFilters = { ...filters, [name]: value }
     setFilters(newFilters)
-    onFilterChange(newFilters)
+    console.log('🔧 Filter changed:', name, '=', value)
+    
+    // Debounce filter changes to avoid race conditions
+    if (filterTimeoutRef.current) {
+      clearTimeout(filterTimeoutRef.current)
+    }
+    filterTimeoutRef.current = setTimeout(() => {
+      onFilterChange(newFilters)
+    }, 300)
   }
 
   const handleSearch = (e) => {
-    onSearch(e.target.value)
+    const value = e.target.value
+    setSearchInput(value)
+    console.log('🔍 Search input:', value)
+    
+    // Debounce search to avoid race conditions
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      onSearch(value)
+    }, 500)
   }
 
   const clearFilters = () => {
@@ -30,10 +85,16 @@ export default function FilterBar({ onFilterChange, onSearch }) {
       ram: '',
       sort: 'name'
     })
+    setSearchInput('')
+    
+    // Clear any pending timeouts
+    if (filterTimeoutRef.current) clearTimeout(filterTimeoutRef.current)
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    
     onFilterChange({})
+    onSearch('')
   }
 
-  const brands = ['OnePlus', 'iPhone', 'Samsung', 'Google', 'Xiaomi']
   const ramOptions = ['6GB', '8GB', '12GB', '16GB']
 
   return (
@@ -44,8 +105,9 @@ export default function FilterBar({ onFilterChange, onSearch }) {
         <input
           type="text"
           placeholder="Search phones by name, brand, or model..."
+          value={searchInput}
           onChange={handleSearch}
-          className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
         />
       </div>
 
@@ -58,13 +120,13 @@ export default function FilterBar({ onFilterChange, onSearch }) {
           <Filter size={18} />
           Advanced Filters
         </button>
-        {Object.values(filters).some(v => v) && (
+        {(Object.values(filters).some(v => v) || searchInput) && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-2 px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
+            className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
           >
             <X size={18} />
-            Clear Filters
+            Clear All
           </button>
         )}
       </div>
@@ -82,10 +144,10 @@ export default function FilterBar({ onFilterChange, onSearch }) {
                 name="brand"
                 value={filters.brand}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-all"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500 transition-all"
               >
                 <option value="">All Brands</option>
-                {brands.map(b => (
+                {allBrands.map(b => (
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>
@@ -102,7 +164,7 @@ export default function FilterBar({ onFilterChange, onSearch }) {
                 value={filters.priceMin}
                 onChange={handleChange}
                 placeholder="15000"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-all"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500 transition-all"
               />
             </div>
 
@@ -116,7 +178,7 @@ export default function FilterBar({ onFilterChange, onSearch }) {
                 value={filters.priceMax}
                 onChange={handleChange}
                 placeholder="200000"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-all"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500 transition-all"
               />
             </div>
 
@@ -129,7 +191,7 @@ export default function FilterBar({ onFilterChange, onSearch }) {
                 name="ram"
                 value={filters.ram}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-all"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500 transition-all"
               >
                 <option value="">Any RAM</option>
                 {ramOptions.map(r => (
@@ -147,7 +209,7 @@ export default function FilterBar({ onFilterChange, onSearch }) {
                 name="sort"
                 value={filters.sort}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-all"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500 transition-all"
               >
                 <option value="name">Name (A-Z)</option>
                 <option value="price">Price (Low to High)</option>

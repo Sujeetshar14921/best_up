@@ -12,16 +12,16 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-2xl font-bold text-yellow-400">Best</span>
-              <span className="text-2xl font-bold text-blue-600">Up</span>
+              <span className="text-2xl font-bold text-yellow-500">Best</span>
+              <span className="text-2xl font-bold text-orange-600">Up</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
               Your intelligent smartphone guide. We help you find the perfect phone based on your budget and priorities.
             </p>
             <div className="flex gap-4">
-              <Heart size={18} className="text-red-500" />
-              <Shield size={18} className="text-green-500" />
-              <Zap size={18} className="text-yellow-500" />
+              <Heart size={18} className="text-yellow-500" />
+              <Shield size={18} className="text-orange-500" />
+              <Zap size={18} className="text-yellow-400" />
             </div>
           </div>
 
@@ -29,10 +29,10 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-4 text-lg">Quick Links</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="/" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">→</span> Home</a></li>
-              <li><a href="/recommend" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">→</span> Find Phone</a></li>
-              <li><a href="/phones" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">→</span> All Phones</a></li>
-              <li><a href="/compare" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">→</span> Compare</a></li>
+              <li><a href="/" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Home</a></li>
+              <li><a href="/recommend" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Find Phone</a></li>
+              <li><a href="/phones" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> All Phones</a></li>
+              <li><a href="/compare" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Compare</a></li>
             </ul>
           </div>
 
@@ -40,10 +40,10 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-4 text-lg">Features</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-2"><span className="text-blue-400">★</span> AI Recommendations</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-2"><span className="text-blue-400">★</span> Phone Comparison</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-2"><span className="text-blue-400">★</span> Detailed Specs</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-2"><span className="text-blue-400">★</span> Price Tracking</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> AI Recommendations</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> Phone Comparison</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> Detailed Specs</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> Price Tracking</a></li>
             </ul>
           </div>
 
@@ -52,15 +52,15 @@ export default function Footer() {
             <h4 className="font-bold text-white mb-4 text-lg">Get in Touch</h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
-                <Mail size={16} className="text-yellow-400 mt-1 flex-shrink-0" />
-                <a href="mailto:support@bestup.com" className="text-gray-400 hover:text-yellow-400 transition-colors">support@bestup.com</a>
+                <Mail size={16} className="text-orange-500 mt-1 flex-shrink-0" />
+                <a href="mailto:support@bestup.com" className="text-gray-400 hover:text-orange-400 transition-colors">support@bestup.com</a>
               </li>
               <li className="flex items-start gap-3">
-                <Phone size={16} className="text-yellow-400 mt-1 flex-shrink-0" />
+                <Phone size={16} className="text-orange-500 mt-1 flex-shrink-0" />
                 <span className="text-gray-400">+91 8957744642</span>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin size={16} className="text-yellow-400 mt-1 flex-shrink-0" />
+                <MapPin size={16} className="text-orange-500 mt-1 flex-shrink-0" />
                 <span className="text-gray-400">India</span>
               </li>
             </ul>
@@ -74,23 +74,23 @@ export default function Footer() {
             <p className="text-gray-400 text-xs md:text-sm">Phones Listed</p>
           </div>
           <div className="text-center">
-            <div className="text-2xl md:text-3xl font-bold text-blue-400">50K+</div>
+            <div className="text-2xl md:text-3xl font-bold text-orange-400">50K+</div>
             <p className="text-gray-400 text-xs md:text-sm">Users Helped</p>
           </div>
           <div className="text-center">
-            <div className="text-2xl md:text-3xl font-bold text-green-400">100%</div>
+            <div className="text-2xl md:text-3xl font-bold text-yellow-500">100%</div>
             <p className="text-gray-400 text-xs md:text-sm">Accurate Data</p>
           </div>
         </div>
 
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-          <p>&copy; {currentYear} <span className="text-yellow-400">Best</span><span className="text-blue-400">Up</span>. All rights reserved.</p>
+          <p>&copy; {currentYear} <span className="text-yellow-400">Best</span><span className="text-orange-400">Up</span>. All rights reserved.</p>
           <div className="flex gap-6 mt-4 md:mt-0 flex-wrap justify-center">
-            <a href="#" className="hover:text-yellow-400 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-yellow-400 transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-yellow-400 transition-colors">Cookie Policy</a>
-            <a href="#" className="hover:text-yellow-400 transition-colors">Sitemap</a>
+            <a href="#" className="hover:text-orange-400 transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-orange-400 transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-orange-400 transition-colors">Cookie Policy</a>
+            <a href="#" className="hover:text-orange-400 transition-colors">Sitemap</a>
           </div>
         </div>
       </div>

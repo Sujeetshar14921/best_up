@@ -5,7 +5,7 @@ export default function LoadingError({ loading, error, children }) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <Loader className="w-12 h-12 text-primary animate-spin" />
+        <Loader className="w-12 h-12 text-yellow-500 animate-spin" />
         <p className="text-gray-600 mt-4">Loading amazing phones...</p>
       </div>
     )

@@ -4,6 +4,7 @@ import { PhoneProvider } from './context/PhoneContext'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import Home from './pages/Home'
+import PhonesPage from './pages/PhonesPage'
 import RecommendPage from './pages/RecommendPage'
 import ComparisonPage from './pages/ComparisonPage'
 import DetailsPage from './pages/DetailsPage'
@@ -18,6 +19,7 @@ function App() {
           <main className="flex-grow">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/phones" element={<PhonesPage />} />
               <Route path="/recommend" element={<RecommendPage />} />
               <Route path="/compare" element={<ComparisonPage />} />
               <Route path="/phone/:slug" element={<DetailsPage />} />

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const { GridFSBucket } = require('mongodb');
 
-let gfsBucket;
+let phoneBucket;
+let bannerBucket;
 
 const initGridFS = () => {
   const connection = mongoose.connection;
@@ -9,17 +10,29 @@ const initGridFS = () => {
     throw new Error('Mongoose connection DB is not ready. Cannot initialize GridFS.');
   }
 
-  gfsBucket = new GridFSBucket(connection.db, {
+  phoneBucket = new GridFSBucket(connection.db, {
     bucketName: 'phones'
   });
-  return gfsBucket;
+
+  bannerBucket = new GridFSBucket(connection.db, {
+    bucketName: 'banners'
+  });
+
+  return { phoneBucket, bannerBucket };
 };
 
-const getGridFS = () => {
-  if (!gfsBucket) {
-    throw new Error('GridFS not initialized');
+const getGridFS = (bucketType = 'phones') => {
+  if (bucketType === 'banners') {
+    if (!bannerBucket) {
+      throw new Error('Banner GridFS not initialized');
+    }
+    return bannerBucket;
   }
-  return gfsBucket;
+
+  if (!phoneBucket) {
+    throw new Error('Phone GridFS not initialized');
+  }
+  return phoneBucket;
 };
 
 module.exports = {
