@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:all",
+  "buildCommand": "npm install --prefix frontend && npm install --prefix admin_dashboard && npm run build --prefix frontend && npm run build --prefix admin_dashboard",
   "outputDirectory": "frontend/dist",
   "routes": [
     {
