@@ -11,7 +11,7 @@ export const AdminProvider = ({ children }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const API = 'http://localhost:5000/api'
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
   // Restore admin from localStorage on mount
   useEffect(() => {

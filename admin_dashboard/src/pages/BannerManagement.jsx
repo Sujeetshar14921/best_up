@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, X, Upload } from 'lucide-react'
 import axios from 'axios'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 export default function BannerManagement() {
   const [banners, setBanners] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -26,7 +28,7 @@ export default function BannerManagement() {
   const fetchBanners = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('http://localhost:5000/api/banners')
+      const response = await axios.get(`${API_URL}/banners`)
       setBanners(response.data.data || [])
       setError('')
     } catch (err) {
@@ -143,11 +145,11 @@ export default function BannerManagement() {
       }
 
       if (editingBanner) {
-        await axios.put(`http://localhost:5000/api/banners/${editingBanner._id}`, submitData, {
+        await axios.put(`${API_URL}/banners/${editingBanner._id}`, submitData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
       } else {
-        await axios.post('http://localhost:5000/api/banners', submitData, {
+        await axios.post(`${API_URL}/banners`, submitData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
       }
@@ -167,7 +169,7 @@ export default function BannerManagement() {
 
     try {
       setLoading(true)
-      await axios.delete(`http://localhost:5000/api/banners/${bannerId}`)
+      await axios.delete(`${API_URL}/banners/${bannerId}`)
       fetchBanners()
       setError('')
     } catch (err) {
