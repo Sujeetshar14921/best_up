@@ -8,6 +8,22 @@
       "dest": "backend/server.js"
     },
     {
+      "src": "/admin/assets/(.*)",
+      "dest": "admin_dashboard/dist/assets/$1"
+    },
+    {
+      "src": "/admin/(.*\\.js)",
+      "dest": "admin_dashboard/dist/$1"
+    },
+    {
+      "src": "/admin/(.*\\.css)",
+      "dest": "admin_dashboard/dist/$1"
+    },
+    {
+      "src": "/admin/(.*\\.svg)",
+      "dest": "admin_dashboard/dist/$1"
+    },
+    {
       "src": "/admin/(.*)",
       "dest": "admin_dashboard/dist/index.html"
     },
