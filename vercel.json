@@ -12,6 +12,22 @@
       "dest": "admin_dashboard/dist/index.html"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "frontend/dist/assets/$1"
+    },
+    {
+      "src": "/(.*\\.js)",
+      "dest": "frontend/dist/$1"
+    },
+    {
+      "src": "/(.*\\.css)",
+      "dest": "frontend/dist/$1"
+    },
+    {
+      "src": "/(.*\\.svg)",
+      "dest": "frontend/dist/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "frontend/dist/index.html"
     }
