@@ -53,7 +53,7 @@ export default function PhoneManagement( ) {
   const fetchPhones = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/phones/admin`)
+      const response = await axios.get(`${API_URL}/admin/phones`)
       setPhones(response.data.data || [])
     } catch (error) {
       console.error('Error fetching phones:', error)
@@ -194,10 +194,10 @@ export default function PhoneManagement( ) {
       }
 
       if (editingId) {
-        await axios.put(`${API_URL}/phones/admin/${editingId}`, data)
+        await axios.put(`${API_URL}/admin/phones/${editingId}`, data)
         alert('Phone updated successfully!')
       } else {
-        await axios.post(`${API_URL}/phones/admin`, data)
+        await axios.post(`${API_URL}/admin/phones`, data)
         alert('Phone created successfully!')
       }
 
@@ -263,7 +263,7 @@ export default function PhoneManagement( ) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure?')) {
       try {
-        await axios.delete(`${API_URL}/phones/admin/${id}`)
+        await axios.delete(`${API_URL}/admin/phones/${id}`)
         alert('Phone deleted!')
         fetchPhones()
       } catch (error) {
