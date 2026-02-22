@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Trash2, Edit, Plus, ChevronDown, ChevronUp, X } from 'lucide-react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 export default function PhoneManagement( ) {
   const [phones, setPhones] = useState([])
   const [loading, setLoading] = useState(false)
@@ -51,7 +53,7 @@ export default function PhoneManagement( ) {
   const fetchPhones = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('http://localhost:5000/api/phones/admin/phones')
+      const response = await axios.get(`${API_URL}/phones/admin`)
       setPhones(response.data.data || [])
     } catch (error) {
       console.error('Error fetching phones:', error)
@@ -192,10 +194,10 @@ export default function PhoneManagement( ) {
       }
 
       if (editingId) {
-        await axios.put(`http://localhost:5000/api/phones/admin/phones/${editingId}`, data)
+        await axios.put(`${API_URL}/phones/admin/${editingId}`, data)
         alert('Phone updated successfully!')
       } else {
-        await axios.post('http://localhost:5000/api/phones/admin/phones', data)
+        await axios.post(`${API_URL}/phones/admin`, data)
         alert('Phone created successfully!')
       }
 
@@ -261,7 +263,7 @@ export default function PhoneManagement( ) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/phones/admin/phones/${id}`)
+        await axios.delete(`${API_URL}/phones/admin/${id}`)
         alert('Phone deleted!')
         fetchPhones()
       } catch (error) {
