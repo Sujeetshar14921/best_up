@@ -598,14 +598,6 @@ function UpcomingPhoneCard({ phone }) {
         </button>
       </div>
 
-      {/* Coming Soon Badge */}
-      <div className="absolute top-2 left-2 flex gap-1.5 z-10">
-        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
-          <Sparkles size={12} />
-          <span className="text-xs font-bold">Coming</span>
-        </div>
-      </div>
-
       {/* Phone Image Section */}
       <div className="relative h-40 flex items-center justify-center rounded-t-2xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden border-b border-gray-200">
         {phone.imageId ? (
@@ -655,13 +647,10 @@ function UpcomingPhoneCard({ phone }) {
           {phone.basePrice && (
             <>
               <p className="text-xs text-gray-500 font-semibold mb-0.5">Expected Price</p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center">
                 <p className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                  ₹{(phone.basePrice / 100000).toFixed(1)}L
+                  ₹{Number(phone.basePrice).toLocaleString('en-IN')}
                 </p>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-600 flex items-center justify-center group-hover:shadow-lg transition-all group-hover:scale-110 shadow-md">
-                  <Zap size={18} className="text-white fill-white" />
-                </div>
               </div>
             </>
           )}

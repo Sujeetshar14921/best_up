@@ -1,19 +1,26 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, Zap, Smartphone, Heart, Cpu } from 'lucide-react'
+import { Star, Smartphone, Heart, Cpu, ThumbsUp } from 'lucide-react'
+import { phonesAPI } from '../services/api'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const API_ROOT = API.replace(/\/api\/?$/, '')
 
 export default function PhoneCard({ phone }) {
   const [isFavorite, setIsFavorite] = useState(false)
+  const [likeCount, setLikeCount] = useState(Number(phone?.likeCount || 0))
 
   if (!phone || !phone.name) {
     return null
   }
 
   const phoneSlug = phone.slug || phone.name.toLowerCase().replace(/\s+/g, '-')
-  const rating = phone.scores?.valueForMoney || phone.rating || 4.5
+  const rating = Number(phone.reviewStats?.averageRating || phone.userRating || (phone.scores?.valueForMoney || 0) / 2 || phone.rating || 4.5)
+  const reviewCount = Number(phone.reviewStats?.totalReviews || phone.reviewCount || 0)
+
+  useEffect(() => {
+    setLikeCount(Number(phone?.likeCount || 0))
+  }, [phone?._id, phone?.likeCount])
   
   // Calculate minimum variant price or use basePrice
   const minVariantPrice = phone.variants && phone.variants.length > 0
@@ -22,7 +29,21 @@ export default function PhoneCard({ phone }) {
 
   const handleFavoriteClick = (e) => {
     e.preventDefault()
-    setIsFavorite(!isFavorite)
+    const token = localStorage.getItem('bestup_token')
+    if (!token) {
+      return
+    }
+
+    phonesAPI.toggleLike(phone._id)
+      .then((response) => {
+        const liked = Boolean(response.data?.data?.liked)
+        const nextCount = Number(response.data?.data?.likeCount || 0)
+        setIsFavorite(liked)
+        setLikeCount(nextCount)
+      })
+      .catch(() => {
+        // Keep card browsing resilient if like request fails.
+      })
   }
 
   return (
@@ -46,24 +67,20 @@ export default function PhoneCard({ phone }) {
       </div>
 
       {/* Badges Section */}
-      {(rating >= 4.5 || phone.isNew) && (
+      {phone.isNew && (
         <div className="absolute top-2 left-2 flex gap-1.5 z-10">
-          {rating >= 4.5 && (
-            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
-              <Star size={12} className="fill-white" />
-              <span className="text-xs font-bold">{rating.toFixed(1)}</span>
-            </div>
-          )}
-          {phone.isNew && (
-            <div className="bg-gradient-to-r from-green-400 to-teal-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
-              NEW
-            </div>
-          )}
+          <div className="bg-gradient-to-r from-green-400 to-teal-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
+            NEW
+          </div>
         </div>
       )}
 
       {/* Phone Image Section */}
       <div className="relative h-40 flex items-center justify-center rounded-t-2xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden border-b border-gray-200">
+        <div className="absolute left-2 bottom-2 z-10 inline-flex items-center gap-1 bg-black/65 text-white px-2 py-1 rounded-md text-[11px] font-semibold">
+          <ThumbsUp size={12} className="text-yellow-300" />
+          {likeCount}
+        </div>
         {phone.imageId ? (
           <img
             src={`${API_ROOT}/api/phones/admin/phones/${phone._id}/image`}
@@ -89,6 +106,11 @@ export default function PhoneCard({ phone }) {
           {phone.brand && (
             <p className="text-xs text-gray-500 font-medium">{phone.brand}</p>
           )}
+          <div className="flex items-center gap-1 mt-1">
+            <Star size={13} className="fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-bold text-gray-900">{rating.toFixed(1)}</span>
+            <span className="text-[11px] text-gray-500">({reviewCount} feedback)</span>
+          </div>
         </div>
 
         {/* Key Features - RAM, Storage */}
@@ -127,13 +149,10 @@ export default function PhoneCard({ phone }) {
         {/* Price Section */}
         <div className="border-t border-gray-200 pt-2.5 mt-auto">
           <p className="text-xs text-gray-500 font-semibold mb-0.5">From</p>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <p className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
               ₹{minVariantPrice.toLocaleString('en-IN')}
             </p>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-600 flex items-center justify-center group-hover:shadow-lg transition-all group-hover:scale-110 shadow-md">
-              <Zap size={18} className="text-white fill-white" />
-            </div>
           </div>
         </div>
       </div>

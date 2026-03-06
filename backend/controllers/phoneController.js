@@ -64,7 +64,7 @@ const getPhones = asyncHandler(async (req, res) => {
     .limit(Number(limit))
     .skip(Number(skip))
     .sort(sort)
-    .select('name brand basePrice specs scores variants overview imageId slug isUpcoming launchDate');
+    .select('name brand basePrice specs scores variants overview imageId slug isUpcoming launchDate recommended likeCount');
 
   console.log(`✅ Found ${phones.length} phones out of ${total} total`);
 
@@ -275,6 +275,54 @@ const comparePhones = asyncHandler(async (req, res) => {
   });
 });
 
+// ==================== LIKE PHONE ====================
+
+/**
+ * @desc    Toggle like on a phone for current user
+ * @route   PUT /api/phones/:id/like
+ * @access  Private
+ */
+const toggleLikePhone = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: 'Login required to like a phone',
+    });
+  }
+
+  const phone = await Phone.findById(id);
+  if (!phone) {
+    return res.status(404).json({
+      success: false,
+      message: 'Phone not found',
+    });
+  }
+
+  const alreadyLiked = (phone.likedBy || []).some((uid) => String(uid) === String(userId));
+
+  if (alreadyLiked) {
+    phone.likedBy = (phone.likedBy || []).filter((uid) => String(uid) !== String(userId));
+  } else {
+    phone.likedBy = [...(phone.likedBy || []), userId];
+  }
+
+  phone.likeCount = phone.likedBy.length;
+  await phone.save();
+
+  res.status(200).json({
+    success: true,
+    message: alreadyLiked ? 'Like removed' : 'Phone liked',
+    data: {
+      liked: !alreadyLiked,
+      likeCount: phone.likeCount,
+      phoneId: phone._id,
+    },
+  });
+});
+
 // ==================== CREATE PHONE ====================
 
 /**
@@ -399,6 +447,7 @@ module.exports = {
   getPhoneById,
   recommendPhones,
   comparePhones,
+  toggleLikePhone,
   createPhone,
   updatePhone,
   deletePhone,

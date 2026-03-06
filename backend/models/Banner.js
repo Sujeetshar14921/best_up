@@ -29,7 +29,7 @@ const bannerSchema = new mongoose.Schema(
     },
     position: {
       type: String,
-      enum: ['horizontal', 'vertical'],
+      enum: ['horizontal', 'vertical', 'hero'],
       default: 'horizontal'
     },
     isActive: {

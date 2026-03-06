@@ -1,6 +1,7 @@
 const express = require('express');
 const {
   getPhoneReviews,
+  getReviewStatsBulk,
   addReview,
   updateReview,
   deleteReview,
@@ -18,6 +19,13 @@ const router = express.Router();
  * @access  Public
  */
 router.get('/phone/:phoneId', getPhoneReviews);
+
+/**
+ * @route   GET /api/reviews/stats?phoneIds=id1,id2
+ * @desc    Get aggregated review stats for multiple phones
+ * @access  Public
+ */
+router.get('/stats', getReviewStatsBulk);
 
 /**
  * @route   GET /api/reviews/user/:userId

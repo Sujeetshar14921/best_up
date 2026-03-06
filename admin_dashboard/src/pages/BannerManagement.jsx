@@ -249,7 +249,13 @@ export default function BannerManagement() {
               <div className="space-y-3">
                 {/* Meta Info */}
                 <div className="flex items-center justify-between text-xs text-white/80">
-                  <span className={`px-2 py-1 rounded ${banner.position === 'horizontal' ? 'bg-blue-500' : 'bg-yellow-500'}`}>
+                  <span className={`px-2 py-1 rounded ${
+                    banner.position === 'horizontal'
+                      ? 'bg-blue-500'
+                      : banner.position === 'vertical'
+                      ? 'bg-yellow-500'
+                      : 'bg-purple-500'
+                  }`}>
                     {banner.position}
                   </span>
                   <span className={`px-2 py-1 rounded ${banner.isActive ? 'bg-green-500' : 'bg-gray-500'}`}>
@@ -414,6 +420,7 @@ export default function BannerManagement() {
                 >
                   <option value="horizontal">Horizontal</option>
                   <option value="vertical">Vertical</option>
+                  <option value="hero">Hero Section</option>
                 </select>
               </div>
 

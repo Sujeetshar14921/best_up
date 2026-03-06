@@ -6,11 +6,13 @@ const {
   getPhoneById,
   recommendPhones,
   comparePhones,
+  toggleLikePhone,
   createPhone,
   updatePhone,
   deletePhone,
 } = require('../controllers/phoneController');
 const { validate } = require('../middleware/joiValidation');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 // ==================== MAIN ROUTES ====================
 
@@ -29,6 +31,9 @@ router.get('/recommend', recommendPhones);
 
 // GET comparison of multiple phones
 router.get('/compare', comparePhones);
+
+// PUT toggle like for a phone (authenticated user)
+router.put('/:id/like', verifyToken, toggleLikePhone);
 
 // ==================== SINGLE PHONE ROUTES ====================
 

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Zap, Camera, Battery, Smartphone, Share2, Heart, Star, Cpu, Gauge, CalendarDays, IndianRupee } from 'lucide-react'
+import { ArrowLeft, Zap, Camera, Battery, Smartphone, Share2, Heart, Star, Cpu, Gauge, CalendarDays, MessageSquare } from 'lucide-react'
 import { usePhones } from '../context/PhoneContext'
 import LoadingError from '../components/LoadingError'
+import { reviewAPI } from '../services/api'
+import { phonesAPI } from '../services/api'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const API_ROOT = API.replace(/\/api\/?$/, '')
@@ -13,9 +15,9 @@ const formatCurrency = (value) => {
 }
 
 const scoreText = (score) => {
-  if (score >= 8.5) return 'Excellent'
-  if (score >= 7) return 'Very Good'
-  if (score >= 5.5) return 'Good'
+  if (score >= 4.5) return 'Excellent'
+  if (score >= 4) return 'Very Good'
+  if (score >= 3.2) return 'Good'
   return 'Average'
 }
 
@@ -38,14 +40,62 @@ export default function DetailsPage() {
   const { slug } = useParams()
   const { loading, error } = usePhones()
   const [phone, setPhone] = useState(null)
-  const [liked, setLiked] = useState(false)
+  const [reviewStats, setReviewStats] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    totalHelpful: 0,
+    positiveFeedbackRate: 0,
+  })
+  const [recentReviews, setRecentReviews] = useState([])
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', content: '' })
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewSuccess, setReviewSuccess] = useState('')
+  const [helpfulLoadingId, setHelpfulLoadingId] = useState(null)
+  const [likeUpdating, setLikeUpdating] = useState(false)
+  const [phoneLiked, setPhoneLiked] = useState(false)
+
+  const authToken = localStorage.getItem('bestup_token')
+
+  const loadReviews = async (phoneId) => {
+    if (!phoneId) return
+
+    try {
+      setReviewsLoading(true)
+      const reviewResponse = await reviewAPI.getPhoneReviews(phoneId, {
+        limit: 5,
+        sortBy: '-createdAt'
+      })
+      const payload = reviewResponse?.data?.data || {}
+      setReviewStats(payload.stats || {
+        averageRating: 0,
+        totalReviews: 0,
+        totalHelpful: 0,
+        positiveFeedbackRate: 0,
+      })
+      setRecentReviews(payload.reviews || [])
+    } catch (reviewErr) {
+      setReviewStats({
+        averageRating: 0,
+        totalReviews: 0,
+        totalHelpful: 0,
+        positiveFeedbackRate: 0,
+      })
+      setRecentReviews([])
+    } finally {
+      setReviewsLoading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchPhone = async () => {
       try {
         const response = await fetch(`${API}/phones/${slug}`)
         const data = await response.json()
-        setPhone(data.data || data)
+        const nextPhone = data.data || data
+        setPhone(nextPhone)
+        await loadReviews(nextPhone?._id)
       } catch (err) {
         console.error('Failed to fetch phone:', err)
       }
@@ -53,13 +103,131 @@ export default function DetailsPage() {
     if (slug) fetchPhone()
   }, [slug])
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!authToken) {
+      setReviewError('Please login first to submit your feedback.')
+      return
+    }
+
+    if (!phone?._id) return
+
+    const cleanTitle = reviewForm.title.trim()
+    const cleanContent = reviewForm.content.trim()
+    const numericRating = Number(reviewForm.rating)
+
+    if (!cleanTitle || cleanTitle.length < 5) {
+      setReviewError('Review title must be at least 5 characters.')
+      return
+    }
+
+    if (!cleanContent || cleanContent.length < 10) {
+      setReviewError('Feedback must be at least 10 characters.')
+      return
+    }
+
+    if (Number.isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+      setReviewError('Please choose a valid rating between 1 and 5.')
+      return
+    }
+
+    try {
+      setReviewSubmitting(true)
+      setReviewError('')
+      setReviewSuccess('')
+
+      await reviewAPI.addReview({
+        phoneId: phone._id,
+        rating: numericRating,
+        title: cleanTitle,
+        content: cleanContent
+      })
+
+      setReviewSuccess('Thanks! Your feedback has been submitted.')
+      setReviewForm({ rating: 5, title: '', content: '' })
+      await loadReviews(phone._id)
+    } catch (err) {
+      const details = err.response?.data?.errors
+      const detailMessage = Array.isArray(details) ? details.join(' | ') : ''
+      const message = detailMessage || err.response?.data?.message || err.response?.data?.error || 'Failed to submit feedback'
+      setReviewError(message)
+    } finally {
+      setReviewSubmitting(false)
+    }
+  }
+
+  const handleHelpfulVote = async (reviewId, helpful = true) => {
+    if (!authToken) {
+      setReviewError('Please login first to react to feedback.')
+      return
+    }
+
+    try {
+      setHelpfulLoadingId(reviewId)
+      await reviewAPI.markHelpful(reviewId, helpful)
+
+      setRecentReviews((prev) =>
+        prev.map((review) => {
+          if (review._id !== reviewId) return review
+          return {
+            ...review,
+            helpfulCount: helpful
+              ? Number(review.helpfulCount || 0) + 1
+              : Number(review.helpfulCount || 0),
+            notHelpfulCount: helpful
+              ? Number(review.notHelpfulCount || 0)
+              : Number(review.notHelpfulCount || 0) + 1,
+          }
+        })
+      )
+
+      if (helpful) {
+        setReviewStats((prev) => ({
+          ...prev,
+          totalHelpful: Number(prev.totalHelpful || 0) + 1,
+        }))
+      }
+    } catch (err) {
+      const message = err.response?.data?.message || 'Could not save your reaction'
+      setReviewError(message)
+    } finally {
+      setHelpfulLoadingId(null)
+    }
+  }
+
+  const handlePhoneLike = async () => {
+    if (!authToken) {
+      setReviewError('Please login first to like this phone.')
+      return
+    }
+
+    if (!phone?._id || likeUpdating) return
+
+    try {
+      setLikeUpdating(true)
+      const response = await phonesAPI.toggleLike(phone._id)
+      const nextLiked = Boolean(response.data?.data?.liked)
+      const nextLikeCount = Number(response.data?.data?.likeCount || 0)
+
+      setPhoneLiked(nextLiked)
+      setPhone((prev) => (prev ? { ...prev, likeCount: nextLikeCount } : prev))
+    } catch (err) {
+      const message = err.response?.data?.message || 'Could not update like right now'
+      setReviewError(message)
+    } finally {
+      setLikeUpdating(false)
+    }
+  }
+
   if (loading) return <LoadingError loading={true} />
   if (error) return <LoadingError error={error} />
   if (!phone) return <LoadingError error="Phone not found" />
 
   const specs = phone.specs || {}
-  const rating = phone.scores?.valueForMoney || phone.rating || 4.5
-  const reviewCount = phone.reviewCount || 0
+  const rating = Number(reviewStats.averageRating || (phone.scores?.valueForMoney || 0) / 2 || phone.rating || 4.5)
+  const reviewCount = Number(reviewStats.totalReviews || 0)
+  const likeCount = Number(phone.likeCount || 0)
   const useCases = getUseCases(phone.scores || {})
   const pros = phone.pros || phone.highlights?.pros || []
   const cons = phone.cons || phone.highlights?.cons || []
@@ -74,6 +242,17 @@ export default function DetailsPage() {
     { label: 'Battery', value: specs.battery?.capacity ? `${specs.battery.capacity} mAh` : 'Not specified', icon: Battery },
     { label: 'Refresh Rate', value: specs.display?.refreshRate ? `${specs.display.refreshRate} Hz` : 'Not specified', icon: Smartphone },
   ]
+
+  const renderStars = (value) => {
+    const rounded = Math.max(0, Math.min(5, Number(value || 0)))
+    return [1, 2, 3, 4, 5].map((n) => (
+      <Star
+        key={n}
+        size={16}
+        className={n <= rounded ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}
+      />
+    ))
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-yellow-50">
@@ -116,13 +295,14 @@ export default function DetailsPage() {
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-100 border border-yellow-200 text-yellow-800 font-semibold text-sm">
-                  <Star size={16} className="fill-yellow-500 text-yellow-500" />
-                  {rating.toFixed(1)} / 10
+                  <span className="inline-flex items-center gap-1">{renderStars(rating)}</span>
+                  {rating.toFixed(1)} / 5
                 </span>
                 <span className="text-sm text-gray-600">
                   {scoreText(rating)}
                   {reviewCount > 0 ? ` • ${reviewCount} reviews` : ''}
                 </span>
+                <span className="text-sm text-gray-600">• {likeCount} likes</span>
               </div>
 
               <div className="mt-7">
@@ -147,15 +327,17 @@ export default function DetailsPage() {
 
               <div className="mt-6 flex gap-3">
                 <button
-                  onClick={() => setLiked(!liked)}
-                  className={`px-5 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
-                    liked
-                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
-                      : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-200'
-                  }`}
+                  type="button"
+                  onClick={handlePhoneLike}
+                  disabled={likeUpdating}
+                  className={`px-5 py-3 rounded-xl font-bold flex items-center gap-2 border transition-all ${
+                    phoneLiked
+                      ? 'bg-red-100 text-red-700 border-red-200'
+                      : 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-200'
+                  } ${likeUpdating ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
-                  <Heart size={18} className={liked ? 'fill-current' : ''} />
-                  {liked ? 'Liked' : 'Like'}
+                  <Heart size={18} className="fill-current" />
+                  {likeCount} Likes
                 </button>
                 <button className="px-5 py-3 bg-white text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-all flex items-center gap-2 border border-gray-200">
                   <Share2 size={18} />
@@ -289,6 +471,108 @@ export default function DetailsPage() {
             </div>
           </section>
         )}
+
+        <section className="bg-white rounded-3xl border border-gray-200 p-6 md:p-8 shadow-sm mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">User Feedback</h2>
+            <span className="text-sm text-gray-500 inline-flex items-center gap-1">
+              <MessageSquare size={14} /> {reviewCount} total feedback
+            </span>
+          </div>
+
+          <form onSubmit={handleReviewSubmit} className="mb-6 rounded-2xl border border-gray-200 p-4 bg-gray-50 space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-sm font-semibold text-gray-800">Rate this phone</p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setReviewForm((prev) => ({ ...prev, rating: n }))}
+                    className="p-0.5"
+                  >
+                    <Star
+                      size={18}
+                      className={n <= Number(reviewForm.rating) ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={reviewForm.title}
+              onChange={(e) => setReviewForm((prev) => ({ ...prev, title: e.target.value }))}
+              placeholder="Review title"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              required
+            />
+            <textarea
+              value={reviewForm.content}
+              onChange={(e) => setReviewForm((prev) => ({ ...prev, content: e.target.value }))}
+              placeholder="Write your feedback"
+              rows={3}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              required
+            />
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs text-gray-500">Your feedback helps improve ratings and recommendations.</p>
+              <button
+                type="submit"
+                disabled={reviewSubmitting}
+                className="px-4 py-2 rounded-lg bg-yellow-500 text-white font-semibold hover:bg-yellow-600 disabled:opacity-60"
+              >
+                {reviewSubmitting ? 'Submitting...' : 'Submit Feedback'}
+              </button>
+            </div>
+            {reviewError && <p className="text-sm text-red-600">{reviewError}</p>}
+            {reviewSuccess && <p className="text-sm text-green-700">{reviewSuccess}</p>}
+          </form>
+
+          {reviewsLoading ? (
+            <p className="text-sm text-gray-500">Loading user feedback...</p>
+          ) : recentReviews.length === 0 ? (
+            <p className="text-sm text-gray-500">No user feedback available yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {recentReviews.map((review) => (
+                <div key={review._id} className="rounded-xl border border-gray-200 p-4 bg-gray-50">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-gray-900 line-clamp-1">{review.title}</p>
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-700">
+                      {renderStars(review.rating)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2 line-clamp-3">{review.content}</p>
+                  <div className="mt-3 flex items-center justify-between text-xs text-gray-500 gap-3 flex-wrap">
+                    <span>by {review.userId?.name || 'User'}</span>
+                    <div className="inline-flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={helpfulLoadingId === review._id}
+                        onClick={() => handleHelpfulVote(review._id, true)}
+                        className="px-2 py-1 rounded-md border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-60"
+                      >
+                        Helpful ({review.helpfulCount || 0})
+                      </button>
+                      <button
+                        type="button"
+                        disabled={helpfulLoadingId === review._id}
+                        onClick={() => handleHelpfulVote(review._id, false)}
+                        className="px-2 py-1 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                      >
+                        Not Helpful
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="text-xs text-gray-500">
+                Positive feedback rate: {reviewStats.positiveFeedbackRate || 0}%
+              </div>
+            </div>
+          )}
+        </section>
 
         <section className="rounded-3xl bg-gradient-to-r from-yellow-500 via-orange-500 to-orange-600 text-white p-8 md:p-10 text-center">
           <h2 className="text-3xl md:text-4xl font-black mb-3">Need a final decision?</h2>

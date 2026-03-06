@@ -18,6 +18,58 @@ const invalidatePhoneCaches = () => {
   clearCache('/api/analytics');
 };
 
+const parseNumericValue = (value) => {
+  if (value === null || value === undefined || value === '') return undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+
+  const match = String(value).match(/-?\d+(\.\d+)?/);
+  if (!match) return undefined;
+
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const normalizeNumericSpecs = (specs = {}) => {
+  const next = JSON.parse(JSON.stringify(specs || {}));
+
+  if (!next.performance) next.performance = {};
+  if (!next.display) next.display = {};
+  if (!next.camera) next.camera = {};
+  if (!next.camera.rear) next.camera.rear = {};
+  if (!next.camera.rear.main) next.camera.rear.main = {};
+  if (!next.camera.front) next.camera.front = {};
+  if (!next.battery) next.battery = {};
+
+  const mappings = [
+    ['performance', 'antutuScore'],
+    ['display', 'refreshRate'],
+    ['display', 'touchSamplingRate'],
+    ['display', 'brightness'],
+    ['camera', 'rear', 'main', 'megapixels'],
+    ['camera', 'front', 'megapixels'],
+    ['battery', 'capacity'],
+    ['battery', 'chargingSpeed'],
+  ];
+
+  mappings.forEach((path) => {
+    let obj = next;
+    for (let i = 0; i < path.length - 1; i++) {
+      obj = obj?.[path[i]];
+      if (!obj) return;
+    }
+
+    const field = path[path.length - 1];
+    const parsed = parseNumericValue(obj[field]);
+    if (parsed !== undefined) {
+      obj[field] = parsed;
+    } else {
+      delete obj[field];
+    }
+  });
+
+  return next;
+};
+
 // Create phone with image upload
 exports.createPhone = asyncHandler(async (req, res) => {
   try {
@@ -126,6 +178,7 @@ exports.createPhone = asyncHandler(async (req, res) => {
       battery: { capacity: 0, ...((parsedSpecs?.battery) || {}) },
       ...(parsedSpecs || {})
     };
+    parsedSpecs = normalizeNumericSpecs(parsedSpecs);
 
     let parsedScores = scores;
     if (typeof scores === 'string') {
@@ -307,7 +360,8 @@ exports.updatePhone = asyncHandler(async (req, res) => {
 
   // Handle specs update
   if (specs) {
-    updateData.specs = typeof specs === 'string' ? JSON.parse(specs) : specs;
+    const parsedSpecs = typeof specs === 'string' ? JSON.parse(specs) : specs;
+    updateData.specs = normalizeNumericSpecs(parsedSpecs);
   }
 
   // Handle variants update

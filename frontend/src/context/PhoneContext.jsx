@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
-import { phonesAPI } from '../services/api'
+import { phonesAPI, reviewAPI } from '../services/api'
 
 const PhoneContext = createContext()
 
@@ -15,7 +15,26 @@ export const PhoneProvider = ({ children }) => {
     setError(null)
     try {
       const response = await phonesAPI.getPhones(filters)
-      setPhones(response.data.data || response.data)
+      const rawPhones = response.data.data || response.data
+      const normalizedPhones = Array.isArray(rawPhones) ? rawPhones : []
+
+      const ids = normalizedPhones.map((p) => p?._id).filter(Boolean)
+      let statsByPhoneId = {}
+
+      try {
+        const statsResponse = await reviewAPI.getStats(ids)
+        statsByPhoneId = statsResponse?.data?.data || {}
+      } catch (statsErr) {
+        // Keep phone browsing functional even if review stats endpoint fails.
+        statsByPhoneId = {}
+      }
+
+      const merged = normalizedPhones.map((phone) => ({
+        ...phone,
+        reviewStats: statsByPhoneId[phone._id] || null,
+      }))
+
+      setPhones(merged)
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch phones')
     } finally {

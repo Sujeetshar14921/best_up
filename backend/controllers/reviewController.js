@@ -1,6 +1,7 @@
 const Review = require('../models/Review');
 const Phone = require('../models/Phone');
 const asyncHandler = require('../middleware/asyncHandler');
+const mongoose = require('mongoose');
 
 /**
  * @desc    Get all reviews for a phone
@@ -30,7 +31,7 @@ exports.getPhoneReviews = asyncHandler(async (req, res) => {
 
   const total = await Review.countDocuments({ phoneId, isActive: true });
 
-  // Calculate average rating
+  // Calculate review stats
   const ratingData = await Review.aggregate([
     { $match: { phoneId: phone._id, isActive: true } },
     {
@@ -38,6 +39,13 @@ exports.getPhoneReviews = asyncHandler(async (req, res) => {
         _id: null,
         averageRating: { $avg: '$rating' },
         totalReviews: { $sum: 1 },
+        totalHelpful: { $sum: '$helpfulCount' },
+        totalNotHelpful: { $sum: '$notHelpfulCount' },
+        positiveReviews: {
+          $sum: {
+            $cond: [{ $gte: ['$rating', 4] }, 1, 0],
+          },
+        },
         ratingDistribution: {
           $push: '$rating',
         },
@@ -64,9 +72,72 @@ exports.getPhoneReviews = asyncHandler(async (req, res) => {
       stats: {
         averageRating: parseFloat(averageRating.toFixed(2)),
         totalReviews: ratingData[0]?.totalReviews || 0,
+        totalHelpful: ratingData[0]?.totalHelpful || 0,
+        totalNotHelpful: ratingData[0]?.totalNotHelpful || 0,
+        positiveFeedbackRate: ratingData[0]?.totalReviews
+          ? Math.round((ratingData[0].positiveReviews / ratingData[0].totalReviews) * 100)
+          : 0,
         ratingDistribution: calculateRatingDistribution(ratingDistribution),
       },
     },
+  });
+});
+
+/**
+ * @desc    Get review stats for multiple phones
+ * @route   GET /api/reviews/stats?phoneIds=id1,id2
+ * @access  Public
+ */
+exports.getReviewStatsBulk = asyncHandler(async (req, res) => {
+  const raw = req.query.phoneIds || '';
+  const phoneIds = String(raw)
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id && id.match(/^[0-9a-fA-F]{24}$/));
+
+  if (phoneIds.length === 0) {
+    return res.status(200).json({
+      success: true,
+      data: {},
+    });
+  }
+
+  const objectIds = phoneIds.map((id) => new mongoose.Types.ObjectId(id));
+
+  const stats = await Review.aggregate([
+    { $match: { phoneId: { $in: objectIds }, isActive: true } },
+    {
+      $group: {
+        _id: '$phoneId',
+        averageRating: { $avg: '$rating' },
+        totalReviews: { $sum: 1 },
+        totalHelpful: { $sum: '$helpfulCount' },
+        totalNotHelpful: { $sum: '$notHelpfulCount' },
+        positiveReviews: {
+          $sum: {
+            $cond: [{ $gte: ['$rating', 4] }, 1, 0],
+          },
+        },
+      },
+    },
+  ]);
+
+  const byPhoneId = {};
+  stats.forEach((s) => {
+    byPhoneId[String(s._id)] = {
+      averageRating: Number((s.averageRating || 0).toFixed(2)),
+      totalReviews: s.totalReviews || 0,
+      totalHelpful: s.totalHelpful || 0,
+      totalNotHelpful: s.totalNotHelpful || 0,
+      positiveFeedbackRate: s.totalReviews
+        ? Math.round((s.positiveReviews / s.totalReviews) * 100)
+        : 0,
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    data: byPhoneId,
   });
 });
 

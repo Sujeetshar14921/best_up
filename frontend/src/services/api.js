@@ -60,7 +60,10 @@ export const phonesAPI = {
   updatePhone: (slug, phoneData) => api.put(`/phones/${slug}`, phoneData),
 
   // Delete phone (admin)
-  deletePhone: (slug) => api.delete(`/phones/${slug}`)
+  deletePhone: (slug) => api.delete(`/phones/${slug}`),
+
+  // Toggle like (auth user)
+  toggleLike: (id) => api.put(`/phones/${id}/like`)
 }
 
 export const authAPI = {
@@ -69,6 +72,21 @@ export const authAPI = {
   forgotPassword: (payload) => api.post('/auth/forgot-password', payload),
   resetPassword: (payload) => api.post('/auth/reset-password', payload),
   getMe: () => api.get('/auth/me')
+}
+
+export const reviewAPI = {
+  getStats: (phoneIds = []) => {
+    if (!Array.isArray(phoneIds) || phoneIds.length === 0) {
+      return Promise.resolve({ data: { success: true, data: {} } })
+    }
+
+    return api.get('/reviews/stats', {
+      params: { phoneIds: phoneIds.join(',') }
+    })
+  },
+  getPhoneReviews: (phoneId, params = {}) => api.get(`/reviews/phone/${phoneId}`, { params }),
+  addReview: (payload) => api.post('/reviews', payload),
+  markHelpful: (reviewId, helpful = true) => api.put(`/reviews/${reviewId}/helpful`, { helpful })
 }
 
 export default api

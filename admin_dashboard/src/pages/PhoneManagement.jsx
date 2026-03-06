@@ -4,6 +4,7 @@ import { Trash2, Edit, Plus, ChevronDown, ChevronUp, X } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const API_ROOT = API_URL.replace(/\/api\/?$/, '')
+const BRAND_OPTIONS = ['Apple', 'Samsung', 'OnePlus', 'Google', 'Xiaomi', 'Realme', 'POCO', 'Vivo', 'Oppo', 'Motorola', 'Nothing', 'Other']
 
 const getAuthConfig = () => {
   const token = localStorage.getItem('adminToken')
@@ -187,6 +188,11 @@ export default function PhoneManagement( ) {
       return
     }
 
+    if (!BRAND_OPTIONS.includes(formData.brand)) {
+      alert('Please select a valid brand from the dropdown.')
+      return
+    }
+
     for (let i = 0; i < formData.variants.length; i++) {
       const v = formData.variants[i]
       if (!v.price || v.price <= 0) {
@@ -236,7 +242,11 @@ export default function PhoneManagement( ) {
       if (error.response?.status === 401) {
         setError('Session expired or unauthorized. Please login again.')
       }
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message
+      const validationErrors = error.response?.data?.errors
+      const detailedValidation = validationErrors
+        ? Object.entries(validationErrors).map(([field, message]) => `${field}: ${message}`).join(' | ')
+        : null
+      const errorMsg = detailedValidation || error.response?.data?.message || error.response?.data?.error || error.message
       alert('Error: ' + errorMsg)
     } finally {
       setUploadingImage(false)
@@ -265,7 +275,7 @@ export default function PhoneManagement( ) {
 
     setFormData({
       name: phone.name || '',
-      brand: phone.brand || 'Samsung',
+      brand: BRAND_OPTIONS.includes(phone.brand) ? phone.brand : 'Other',
       basePrice: phone.basePrice || '',
       overview: phone.overview || '',
       releaseDate: phone.releaseDate || '',
@@ -382,14 +392,16 @@ export default function PhoneManagement( ) {
               className="col-span-2 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
-            <input
-              type="text"
+            <select
               name="brand"
-              placeholder="Brand"
               value={formData.brand}
               onChange={handleInputChange}
               className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            >
+              {BRAND_OPTIONS.map((brand) => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
             <input
               type="number"
               name="basePrice"
@@ -548,8 +560,8 @@ export default function PhoneManagement( ) {
                 className="w-full px-3 py-2 border rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
-                type="text"
-                placeholder="Charging Speed"
+                type="number"
+                placeholder="Charging Speed (W)"
                 value={formData.specs?.battery?.chargingSpeed || ''}
                 onChange={(e) => handleSpecsChange('specs.battery.chargingSpeed', e.target.value)}
                 className="w-full px-3 py-2 border rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"

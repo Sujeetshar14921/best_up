@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Flame, TrendingUp, Star, Zap } from 'lucide-react'
+import { Flame, Star, Zap } from 'lucide-react'
 import axios from 'axios'
+import { reviewAPI } from '../services/api'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -20,14 +21,28 @@ export default function TrendingPhones() {
       setLoading(true)
       const response = await axios.get(`${API}/phones`, {
         params: {
-          limit: 10,
+          limit: 50,
           sort: '-scores.valueForMoney'
         }
       })
-      const normalized = (response.data.data || []).map((phone, idx) => ({
+      const base = (response.data.data || [])
+        .filter((phone) => phone.recommended)
+        .slice(0, 10)
+
+      const ids = base.map((p) => p?._id).filter(Boolean)
+      let statsByPhoneId = {}
+      try {
+        const statsResponse = await reviewAPI.getStats(ids)
+        statsByPhoneId = statsResponse?.data?.data || {}
+      } catch (statsErr) {
+        statsByPhoneId = {}
+      }
+
+      const normalized = base.map((phone, idx) => ({
         ...phone,
-        reviewCount: 0,
-        trendScore: (phone?.scores?.valueForMoney || 0) + (10 - idx) * 0.01
+        reviewStats: statsByPhoneId[phone._id] || null,
+        reviewCount: statsByPhoneId[phone._id]?.totalReviews || 0,
+        trendScore: (statsByPhoneId[phone._id]?.averageRating || (phone?.scores?.valueForMoney || 0) / 2 || 0) + (10 - idx) * 0.01
       }))
       setPhones(normalized)
       setError(null)
@@ -103,24 +118,13 @@ export default function TrendingPhones() {
         {/* Trending Phones Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {phones.length > 0 ? (
-            phones.map((phone, index) => (
+            phones.map((phone) => (
               <Link
                 key={phone._id}
                 to={`/phone/${phone.slug}`}
                 className="group relative"
               >
                 <div className="relative h-full bg-white rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-red-400">
-                  {/* Rank Badge */}
-                  <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg">
-                    #{index + 1}
-                  </div>
-
-                  {/* Trending Indicator */}
-                  <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                    <TrendingUp size={14} />
-                    Trending
-                  </div>
-
                   {/* Phone Image */}
                   <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
                     {phone.imageId ? (
@@ -142,7 +146,9 @@ export default function TrendingPhones() {
                     {/* Rating */}
                     <div className="flex items-center gap-2 mb-3">
                       <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-bold text-gray-900">{phone.scores?.valueForMoney?.toFixed(1) || 4.5}</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {Number(phone.reviewStats?.averageRating || (phone.scores?.valueForMoney || 0) / 2 || 4.5).toFixed(1)}
+                      </span>
                     </div>
 
                     {/* Review Count & Trend Score */}
@@ -154,12 +160,9 @@ export default function TrendingPhones() {
                     </div>
 
                     {/* Price */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <span className="text-lg font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                         ₹{phone.basePrice?.toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold">
-                        Hot
                       </span>
                     </div>
                   </div>
@@ -169,8 +172,8 @@ export default function TrendingPhones() {
           ) : (
             <div className="col-span-full">
               <div className="text-center mb-6">
-                <p className="text-gray-700 font-semibold">No trending phones yet</p>
-                <p className="text-gray-500 text-sm">Admin can mark phones as recommended to show them here.</p>
+                <p className="text-gray-700 font-semibold">No approved trending phones yet</p>
+                <p className="text-gray-500 text-sm">Admin can enable "Show in Home Trending section" in Phone Management.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {[...Array(5)].map((_, i) => (

@@ -204,7 +204,20 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
+    console.warn('useAuth called outside AuthProvider. Falling back to guest auth state.')
+    return {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      loading: false,
+      error: null,
+      register: async () => ({ success: false, message: 'Auth is not ready yet' }),
+      login: async () => ({ success: false, message: 'Auth is not ready yet' }),
+      logout: () => {},
+      forgotPassword: async () => ({ success: false, message: 'Auth is not ready yet' }),
+      resetPassword: async () => ({ success: false, message: 'Auth is not ready yet' }),
+      refreshMe: async () => {},
+    }
   }
   return context
 }

@@ -116,14 +116,9 @@ export default function TopRatedByCategory() {
             {/* Phones Grid */}
             {phones.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {phones.map((phone, index) => (
+                {phones.map((phone) => (
                   <div key={phone._id} className="relative group">
                     <PhoneCard phone={phone} />
-                    
-                    {/* Rank Badge */}
-                    <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-lg z-20">
-                      {index + 1}
-                    </div>
                   </div>
                 ))}
               </div>

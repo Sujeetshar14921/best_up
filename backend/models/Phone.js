@@ -182,6 +182,13 @@ const phoneSchema = new mongoose.Schema(
     isUpcoming: { type: Boolean, default: false }, // Mark phones as upcoming launches
     launchDate: Date, // Expected launch date for upcoming phones
     recommended: { type: Boolean, default: false }, // Editor's pick
+    likeCount: { type: Number, default: 0 },
+    likedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     timestamps: true,
