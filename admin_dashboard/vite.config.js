@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => ({
-  // Keep local dev at root and use /admin/ only in production deployment.
-  base: mode === 'production' ? '/admin/' : '/',
+  // Use relative asset paths in production so the admin build works at both / and /admin.
+  base: mode === 'production' ? './' : '/',
   plugins: [react()],
   build: {
     outDir: 'dist',
