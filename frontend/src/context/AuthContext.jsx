@@ -72,10 +72,23 @@ export const AuthProvider = ({ children }) => {
       // Legacy /users/register response may not include token.
       // In that case, immediately login with the same credentials.
       if (!nextToken) {
-        const loginResponse = await authAPI.login({ email, password })
-        const loginData = loginResponse.data || {}
-        nextUser = normalizeUser(loginData)
-        nextToken = normalizeToken(loginData)
+        try {
+          const loginResponse = await authAPI.login({ email, password })
+          const loginData = loginResponse.data || {}
+          nextUser = normalizeUser(loginData)
+          nextToken = normalizeToken(loginData)
+        } catch (loginErr) {
+          // Some production backends register successfully but do not auto-login.
+          nextUser = nextUser || null
+          nextToken = null
+        }
+      }
+
+      if (nextUser && !nextToken) {
+        return {
+          success: true,
+          message: data.message || 'Registration successful. Please login to continue.'
+        }
       }
 
       if (!nextUser || !nextToken) {

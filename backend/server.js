@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
 const { initGridFS } = require('./config/gridfs');
+const ensureAdminUser = require('./utils/ensureAdminUser');
 const rateLimiter = require('./middleware/rateLimiter');
 const { cacheMiddleware, clearCache } = require('./middleware/cacheMiddleware');
 
@@ -106,20 +107,23 @@ app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
   
   // Initialize GridFS when DB connection is open
-  const setupGridFS = () => {
+  const setupOnDatabaseReady = async () => {
     try {
       initGridFS();
       console.log('✅ GridFS initialized for image storage'.green.bold);
+
+      await ensureAdminUser();
+      console.log('✅ Admin bootstrap check completed'.green.bold);
     } catch (error) {
-      console.error('GridFS initialization error:', error.message);
+      console.error('Startup initialization error:', error.message);
     }
   };
 
   if (mongoose.connection.readyState === 1) {
-    setupGridFS();
+    setupOnDatabaseReady();
   } else {
     mongoose.connection.once('open', () => {
-      setupGridFS();
+      setupOnDatabaseReady();
     });
 
     mongoose.connection.on('error', (err) => {
