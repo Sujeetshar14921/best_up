@@ -37,9 +37,11 @@ function AdminLayout() {
 }
 
 export default function App() {
+  const routerBasename = window.location.pathname.startsWith('/admin') ? '/admin' : ''
+
   return (
     <AdminProvider>
-      <Router basename="/admin">
+      <Router basename={routerBasename}>
         <Routes>
           <Route path="/*" element={<AdminLayout />} />
           <Route path="*" element={<Navigate to="/" replace />} />
