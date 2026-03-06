@@ -5,6 +5,14 @@ const { clearCache } = require('../middleware/cacheMiddleware')
 const mongoose = require('mongoose')
 const { Readable } = require('stream')
 
+const sendImagePlaceholder = (res) => {
+  const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300"><rect width="100%" height="100%" fill="#f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="20">Image not available</text></svg>`
+  res.status(200)
+  res.set('Content-Type', 'image/svg+xml')
+  res.set('Cache-Control', 'no-store, max-age=0')
+  res.send(placeholderSvg)
+}
+
 const getBannerImageUrl = (banner) => {
   if (!banner.imageId) return banner.imageUrl
   const version = new Date(banner.updatedAt || Date.now()).getTime()
@@ -51,10 +59,7 @@ const getBannerImage = asyncHandler(async (req, res) => {
   const banner = await Banner.findById(req.params.id)
 
   if (!banner || !banner.imageId) {
-    return res.status(404).json({
-      success: false,
-      message: 'Banner or image not found'
-    })
+    return sendImagePlaceholder(res)
   }
 
   try {
@@ -69,16 +74,10 @@ const getBannerImage = asyncHandler(async (req, res) => {
     downloadStream.pipe(res)
 
     downloadStream.on('error', (error) => {
-      res.status(500).json({
-        success: false,
-        message: 'Error downloading image'
-      })
+      return sendImagePlaceholder(res)
     })
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving image: ' + error.message
-    })
+    return sendImagePlaceholder(res)
   }
 })
 

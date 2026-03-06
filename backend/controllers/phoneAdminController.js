@@ -5,6 +5,14 @@ const { Readable } = require('stream');
 const asyncHandler = require('../middleware/asyncHandler');
 const { clearCache } = require('../middleware/cacheMiddleware');
 
+const sendImagePlaceholder = (res) => {
+  const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="420" height="420"><rect width="100%" height="100%" fill="#f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="18">No image</text></svg>`
+  res.status(200)
+  res.set('Content-Type', 'image/svg+xml')
+  res.set('Cache-Control', 'no-store, max-age=0')
+  res.send(placeholderSvg)
+}
+
 // Create phone with image upload
 exports.createPhone = asyncHandler(async (req, res) => {
   try {
@@ -254,10 +262,7 @@ exports.getPhoneImage = asyncHandler(async (req, res) => {
   const phone = await Phone.findById(req.params.id);
 
   if (!phone || !phone.imageId) {
-    return res.status(404).json({
-      success: false,
-      error: 'Phone or image not found',
-    });
+    return sendImagePlaceholder(res);
   }
 
   const gfs = getGridFS();
@@ -272,10 +277,7 @@ exports.getPhoneImage = asyncHandler(async (req, res) => {
   downloadStream.pipe(res);
 
   downloadStream.on('error', (error) => {
-    res.status(500).json({
-      success: false,
-      error: 'Error downloading image',
-    });
+    return sendImagePlaceholder(res);
   });
 });
 
