@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install --prefix frontend && npm install --prefix admin_dashboard && npm run build --prefix frontend && npm run build --prefix admin_dashboard && node -e \"const fs=require('fs');fs.rmSync('frontend/dist/admin',{recursive:true,force:true});fs.cpSync('admin_dashboard/dist','frontend/dist/admin',{recursive:true});\"",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "frontend/dist",
   "routes": [
     {

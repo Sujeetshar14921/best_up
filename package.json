@@ -7,6 +7,7 @@
     "install:all": "npm install --prefix frontend && npm install --prefix backend && npm install --prefix admin_dashboard",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
-    "dev:admin": "npm run dev --prefix admin_dashboard"
+    "dev:admin": "npm run dev --prefix admin_dashboard",
+    "vercel-build": "node scripts/vercel-build.cjs"
   }
 }

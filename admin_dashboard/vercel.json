@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npm install --prefix ../frontend && npm run build --prefix ../frontend && npm run build && node -e \"const fs=require('fs');fs.rmSync('dist/admin',{recursive:true,force:true});fs.mkdirSync('dist/admin',{recursive:true});fs.rmSync('dist/frontend',{recursive:true,force:true});fs.cpSync('../frontend/dist','dist/frontend',{recursive:true});fs.cpSync('dist/assets','dist/admin/assets',{recursive:true});fs.copyFileSync('dist/index.html','dist/admin/index.html');fs.rmSync('dist/assets',{recursive:true,force:true});fs.cpSync('../frontend/dist/assets','dist/assets',{recursive:true});\"",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
   "routes": [
     {
