@@ -4,6 +4,7 @@ import { Smartphone, TrendingUp, BarChart3 } from 'lucide-react'
 import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const PAGE_SIZE = 100
 
 const SEGMENTS = [
   { name: 'Budget', range: '₹0 - ₹15K', color: 'from-green-400 to-emerald-600', icon: '💰', maxPrice: 15000 },
@@ -31,10 +32,22 @@ export default function PriceSegmentAnalysis() {
   const fetchSegmentData = async () => {
     try {
       setLoading(true)
-      const phonesResponse = await axios.get(`${API}/phones`, {
-        params: { limit: 500 }
-      })
-      const phones = phonesResponse.data.data || []
+      const phones = []
+      let skip = 0
+      let total = Infinity
+
+      while (skip < total) {
+        const phonesResponse = await axios.get(`${API}/phones`, {
+          params: { limit: PAGE_SIZE, skip }
+        })
+
+        const chunk = phonesResponse.data?.data || []
+        total = Number(phonesResponse.data?.total || chunk.length)
+        phones.push(...chunk)
+
+        if (chunk.length === 0) break
+        skip += PAGE_SIZE
+      }
 
       const aggregate = {
         Budget: { count: 0, scoreSum: 0 },
