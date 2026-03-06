@@ -4,6 +4,13 @@
   "outputDirectory": "dist",
   "routes": [
     {
+      "src": "^/admin$",
+      "status": 308,
+      "headers": {
+        "Location": "/admin/"
+      }
+    },
+    {
       "handle": "filesystem"
     },
     {

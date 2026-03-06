@@ -4,6 +4,13 @@
   "outputDirectory": "frontend/dist",
   "routes": [
     {
+      "src": "^/admin$",
+      "status": 308,
+      "headers": {
+        "Location": "/admin/"
+      }
+    },
+    {
       "src": "/api/(.*)",
       "dest": "backend/server.js"
     },
