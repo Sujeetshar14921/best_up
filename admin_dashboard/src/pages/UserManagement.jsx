@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
 import { Edit2, Trash2, Shield, AlertCircle } from 'lucide-react'
 
 export default function UserManagement() {
   const { users, fetchUsers, updateUserRole, deactivateUser, activateUser, deleteUser, loading, error } = useAdmin()
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     fetchUsers()
@@ -41,10 +42,31 @@ export default function UserManagement() {
     }
   }
 
+  const filteredUsers = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase()
+    if (!q) return users || []
+    return (users || []).filter((user) =>
+      (user.name || '').toLowerCase().includes(q) ||
+      (user.email || '').toLowerCase().includes(q) ||
+      (user.role || '').toLowerCase().includes(q)
+    )
+  }, [users, searchTerm])
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <h1 className="text-3xl font-bold text-dark">User Management</h1>
+
+      {/* Search */}
+      <div className="bg-white rounded-lg shadow-card p-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search users by name, email, or role..."
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40"
+        />
+      </div>
 
       {/* Error Message */}
       {error && (
@@ -67,7 +89,7 @@ export default function UserManagement() {
             </tr>
           </thead>
           <tbody>
-            {users && users.map((user, idx) => (
+            {filteredUsers.map((user, idx) => (
               <tr key={user._id} className={`border-t ${idx % 2 ? 'bg-light' : 'bg-white'}`}>
                 <td className="px-6 py-3 font-semibold">{user.name}</td>
                 <td className="px-6 py-3 text-sm text-gray-600">{user.email}</td>
@@ -119,9 +141,9 @@ export default function UserManagement() {
           </tbody>
         </table>
 
-        {!users || users.length === 0 && (
+        {filteredUsers.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <p>No users found</p>
+            <p>No users found for this search</p>
           </div>
         )}
       </div>

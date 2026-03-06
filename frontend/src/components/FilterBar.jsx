@@ -4,7 +4,7 @@ import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-export default function FilterBar({ onFilterChange, onSearch, initialFilters = {}, initialSearch = '' }) {
+export default function FilterBar({ onFilterChange, onSearch, initialFilters = {}, initialSearch = '', showSearch = true }) {
   const [showFilters, setShowFilters] = useState(false)
   const [allBrands, setAllBrands] = useState([])
   const [filters, setFilters] = useState({
@@ -66,6 +66,7 @@ export default function FilterBar({ onFilterChange, onSearch, initialFilters = {
   }
 
   const handleSearch = (e) => {
+    if (!onSearch) return
     const value = e.target.value
     setSearchInput(value)
     console.log('🔍 Search input:', value)
@@ -94,7 +95,7 @@ export default function FilterBar({ onFilterChange, onSearch, initialFilters = {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
     
     onFilterChange({})
-    onSearch('')
+    if (onSearch) onSearch('')
   }
 
   const ramOptions = ['6GB', '8GB', '12GB', '16GB']
@@ -102,16 +103,18 @@ export default function FilterBar({ onFilterChange, onSearch, initialFilters = {
   return (
     <div className="space-y-4">
       {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-        <input
-          type="text"
-          placeholder="Search phones by name, brand, or model..."
-          value={searchInput}
-          onChange={handleSearch}
-          className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
-        />
-      </div>
+      {showSearch && (
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search phones by name, brand, or model..."
+            value={searchInput}
+            onChange={handleSearch}
+            className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all"
+          />
+        </div>
+      )}
 
       {/* Filter Toggle */}
       <div className="flex justify-between items-center">

@@ -3,6 +3,7 @@ const { getGridFS } = require('../config/gridfs');
 const mongoose = require('mongoose');
 const { Readable } = require('stream');
 const asyncHandler = require('../middleware/asyncHandler');
+const { clearCache } = require('../middleware/cacheMiddleware');
 
 // Create phone with image upload
 exports.createPhone = asyncHandler(async (req, res) => {
@@ -11,7 +12,7 @@ exports.createPhone = asyncHandler(async (req, res) => {
     console.log('📥 Request body keys:', Object.keys(req.body))
     console.log('📥 Received file:', req.file ? `${req.file.fieldname} - ${req.file.size} bytes` : 'No file')
     
-    const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, specs, variants, scores, pros, cons } = req.body;
+    const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, recommended, specs, variants, scores, pros, cons } = req.body;
 
     console.log('📥 Extracted fields:', { name, brand, basePrice, variantsLength: typeof variants })
 
@@ -159,6 +160,7 @@ exports.createPhone = asyncHandler(async (req, res) => {
       releaseDate: releaseDate || null,
       isUpcoming: isUpcoming === 'true' || isUpcoming === true || false,
       launchDate: launchDate || null,
+      recommended: recommended === 'true' || recommended === true || false,
       specs: parsedSpecs || {},
       variants: parsedVariants || [],
       scores: parsedScores || {},
@@ -169,6 +171,9 @@ exports.createPhone = asyncHandler(async (req, res) => {
     });
     
     console.log('✅ Phone created successfully:', phone._id);
+
+    // Ensure homepage analytics reflect admin changes immediately.
+    clearCache('/api/analytics');
 
     res.status(201).json({
       success: true,
@@ -277,7 +282,7 @@ exports.getPhoneImage = asyncHandler(async (req, res) => {
 // Update phone
 exports.updatePhone = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, specs, variants, scores, pros, cons } = req.body;
+  const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, recommended, specs, variants, scores, pros, cons } = req.body;
 
   console.log('📝 Updating phone:', id);
   console.log('📝 Update body keys:', Object.keys(req.body));
@@ -290,6 +295,7 @@ exports.updatePhone = asyncHandler(async (req, res) => {
     releaseDate: releaseDate || null,
     isUpcoming: isUpcoming === 'true' || isUpcoming === true || false,
     launchDate: launchDate || null,
+    recommended: recommended === 'true' || recommended === true,
   };
 
   // Handle specs update
@@ -374,6 +380,9 @@ exports.updatePhone = asyncHandler(async (req, res) => {
 
     console.log('✅ Phone updated successfully:', phone._id);
 
+    // Ensure homepage analytics reflect admin changes immediately.
+    clearCache('/api/analytics');
+
     res.status(200).json({
       success: true,
       message: 'Phone updated successfully',
@@ -423,4 +432,7 @@ exports.deletePhone = asyncHandler(async (req, res) => {
       success: true,
       message: 'Phone deleted successfully',
     });
+
+    // Ensure homepage analytics reflect admin changes immediately.
+    clearCache('/api/analytics');
 });

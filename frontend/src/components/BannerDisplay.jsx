@@ -10,11 +10,15 @@ export function VerticalBannersSection() {
 
   useEffect(() => {
     fetchBanners()
+    const interval = setInterval(fetchBanners, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const fetchBanners = async () => {
     try {
-      const response = await axios.get(`${API}/banners`)
+      const response = await axios.get(`${API}/banners`, {
+        params: { _t: Date.now() }
+      })
       const banners = response.data.data || []
       setVerticalBanners(banners.filter(b => b.position === 'vertical' && b.isActive))
     } catch (err) {
@@ -77,11 +81,15 @@ export function HorizontalBannersSection() {
 
   useEffect(() => {
     fetchBanners()
+    const interval = setInterval(fetchBanners, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const fetchBanners = async () => {
     try {
-      const response = await axios.get(`${API}/banners`)
+      const response = await axios.get(`${API}/banners`, {
+        params: { _t: Date.now() }
+      })
       const banners = response.data.data || []
       setHorizontalBanners(banners.filter(b => b.position === 'horizontal' && b.isActive))
     } catch (err) {

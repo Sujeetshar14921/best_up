@@ -8,15 +8,54 @@ import AdvancedFilters from '../components/AdvancedFilters'
 import SortSelector from '../components/SortSelector'
 import Pagination from '../components/Pagination'
 
+const mapUrlSortToApiSort = (sortParam) => {
+  const map = {
+    'gaming-desc': '-scores.gaming',
+    'camera-desc': '-scores.camera',
+    'battery-desc': '-scores.battery',
+    'display-desc': '-scores.display',
+    'valueForMoney-desc': '-scores.valueForMoney',
+    'price-asc': 'basePrice',
+    'price-desc': '-basePrice',
+    'newest': '-createdAt'
+  }
+  return map[sortParam] || 'name'
+}
+
+const mapUrlSortToUiSort = (sortParam) => {
+  const map = {
+    'gaming-desc': 'performance',
+    'price-asc': 'price-low-high',
+    'price-desc': 'price-high-low',
+    'newest': 'newest'
+  }
+  return map[sortParam] || 'relevance'
+}
+
+const mapUiSortToApiSort = (uiSort) => {
+  const map = {
+    relevance: 'name',
+    'price-low-high': 'basePrice',
+    'price-high-low': '-basePrice',
+    'rating-high': '-scores.valueForMoney',
+    'rating-low': 'scores.valueForMoney',
+    newest: '-createdAt',
+    popularity: '-reviewCount',
+    performance: '-scores.gaming'
+  }
+  return map[uiSort] || 'name'
+}
+
 export default function PhonesPage() {
   const { phones, loading, error, fetchPhones } = usePhones()
   const [searchParams] = useSearchParams()
+  const initialUrlSort = searchParams.get('sort') || ''
   const [filters, setFilters] = useState({
     brand: searchParams.get('brand') || '',
     priceMin: searchParams.get('minPrice') || '',
     priceMax: searchParams.get('maxPrice') || '',
     ram: '',
-    sort: 'name'
+    sort: mapUrlSortToApiSort(initialUrlSort)
   })
   const [advancedFilters, setAdvancedFilters] = useState({
     priceMin: searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')) : 0,
@@ -29,7 +68,7 @@ export default function PhonesPage() {
     processor: []
   })
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
-  const [sortBy, setSortBy] = useState('relevance')
+  const [sortBy, setSortBy] = useState(mapUrlSortToUiSort(initialUrlSort))
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(12)
   const [totalPages, setTotalPages] = useState(1)
@@ -40,12 +79,16 @@ export default function PhonesPage() {
   useEffect(() => {
     const brandParam = searchParams.get('brand') || ''
     const searchParam = searchParams.get('search') || ''
+    const sortParam = searchParams.get('sort') || ''
+    const apiSortFromUrl = mapUrlSortToApiSort(sortParam)
     
     setFilters(prev => ({
       ...prev,
-      brand: brandParam
+      brand: brandParam,
+      sort: apiSortFromUrl
     }))
     setSearchTerm(searchParam)
+    setSortBy(mapUrlSortToUiSort(sortParam))
     urlSearchRef.current = searchParam
   }, [searchParams])
 
@@ -100,6 +143,7 @@ export default function PhonesPage() {
 
   const handleSortChange = (newSort) => {
     setSortBy(newSort)
+    setFilters(prev => ({ ...prev, sort: mapUiSortToApiSort(newSort) }))
     setCurrentPage(1)
   }
 
@@ -170,9 +214,8 @@ export default function PhonesPage() {
         <div className="mb-8">
           <FilterBar 
             initialFilters={filters} 
-            initialSearch={searchTerm}
             onFilterChange={handleFilterChange} 
-            onSearch={handleSearch} 
+            showSearch={false}
           />
         </div>
 

@@ -14,6 +14,7 @@ const getAuthConfig = () => {
 
 export default function PhoneManagement( ) {
   const [phones, setPhones] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -31,6 +32,7 @@ export default function PhoneManagement( ) {
     overview: '',
     releaseDate: '',
     isUpcoming: false,
+    recommended: false,
     launchDate: '',
     pros: [],
     cons: [],
@@ -93,6 +95,8 @@ export default function PhoneManagement( ) {
       basePrice: '',
       overview: '',
       releaseDate: '',
+      isUpcoming: false,
+      recommended: false,
       pros: [],
       cons: [],
       image: null,
@@ -203,6 +207,7 @@ export default function PhoneManagement( ) {
       data.append('overview', formData.overview || '')
       data.append('releaseDate', formData.releaseDate || '')
       data.append('isUpcoming', formData.isUpcoming || false)
+      data.append('recommended', formData.recommended || false)
       data.append('launchDate', formData.launchDate || '')
       data.append('pros', JSON.stringify(formData.pros || []))
       data.append('cons', JSON.stringify(formData.cons || []))
@@ -265,6 +270,7 @@ export default function PhoneManagement( ) {
       overview: phone.overview || '',
       releaseDate: phone.releaseDate || '',
       isUpcoming: phone.isUpcoming || false,
+      recommended: phone.recommended || false,
       launchDate: phone.launchDate || '',
       pros: phone.pros || [],
       cons: phone.cons || [],
@@ -298,6 +304,17 @@ export default function PhoneManagement( ) {
     }
   }
 
+  const normalizedSearch = searchTerm.trim().toLowerCase()
+  const visiblePhones = normalizedSearch
+    ? phones.filter((phone) =>
+        (phone.name || '').toLowerCase().includes(normalizedSearch) ||
+        (phone.brand || '').toLowerCase().includes(normalizedSearch)
+      )
+    : phones
+
+  const availablePhones = visiblePhones.filter(p => !p.isUpcoming)
+  const upcomingPhones = visiblePhones.filter(p => p.isUpcoming)
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -312,6 +329,17 @@ export default function PhoneManagement( ) {
           <Plus size={20} />
           Add Phone
         </button>
+      </div>
+
+      {/* Search */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search phones by name or brand..."
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       {/* Error Message */}
@@ -410,6 +438,19 @@ export default function PhoneManagement( ) {
                   className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               )}
+            </div>
+
+            <div className="col-span-2 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="recommended"
+                  checked={formData.recommended}
+                  onChange={handleInputChange}
+                  className="w-5 h-5 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500"
+                />
+                <span className="font-semibold text-gray-800">Show in Home Trending section (Admin Control)</span>
+              </label>
             </div>
           </div>
 
@@ -606,22 +647,22 @@ export default function PhoneManagement( ) {
 
       {loading ? (
         <div>Loading...</div>
-      ) : phones.length === 0 ? (
+      ) : visiblePhones.length === 0 ? (
         <div className="text-center py-8 text-gray-500">No phones yet</div>
       ) : (
         <div>
           {/* Available Phones Section */}
-          {phones.filter(p => !p.isUpcoming).length > 0 && (
+          {availablePhones.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-1 h-6 bg-blue-500 rounded"></div>
                 <h2 className="text-lg font-bold text-blue-600">Available Phones</h2>
                 <span className="ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
-                  {phones.filter(p => !p.isUpcoming).length}
+                  {availablePhones.length}
                 </span>
               </div>
               <div className="space-y-3">
-                {phones.filter(p => !p.isUpcoming).map(phone => (
+                {availablePhones.map(phone => (
                   <div key={phone._id} className="bg-white p-4 rounded-lg shadow border-l-4 border-l-blue-500">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -666,17 +707,17 @@ export default function PhoneManagement( ) {
           )}
 
           {/* Upcoming Phones Section */}
-          {phones.filter(p => p.isUpcoming).length > 0 && (
+          {upcomingPhones.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-1 h-6 bg-purple-500 rounded"></div>
                 <h2 className="text-lg font-bold text-purple-600">✨ Upcoming Phones</h2>
                 <span className="ml-2 bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
-                  {phones.filter(p => p.isUpcoming).length}
+                  {upcomingPhones.length}
                 </span>
               </div>
               <div className="space-y-3">
-                {phones.filter(p => p.isUpcoming).map(phone => (
+                {upcomingPhones.map(phone => (
                   <div key={phone._id} className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg shadow border-l-4 border-l-purple-500">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">

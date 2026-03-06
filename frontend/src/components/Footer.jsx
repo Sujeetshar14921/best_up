@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           {/* Brand Section */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-0 mb-4">
               <span className="text-2xl font-bold text-yellow-500">Best</span>
               <span className="text-2xl font-bold text-orange-600">Up</span>
             </div>
@@ -30,7 +30,6 @@ export default function Footer() {
             <h4 className="font-bold text-white mb-4 text-lg">Quick Links</h4>
             <ul className="space-y-3 text-sm">
               <li><a href="/" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Home</a></li>
-              <li><a href="/recommend" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Find Phone</a></li>
               <li><a href="/phones" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> All Phones</a></li>
               <li><a href="/compare" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Compare</a></li>
             </ul>

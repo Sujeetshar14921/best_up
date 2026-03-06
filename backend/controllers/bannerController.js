@@ -1,8 +1,15 @@
 const Banner = require('../models/Banner')
 const asyncHandler = require('../middleware/asyncHandler')
 const { getGridFS } = require('../config/gridfs')
+const { clearCache } = require('../middleware/cacheMiddleware')
 const mongoose = require('mongoose')
 const { Readable } = require('stream')
+
+const getBannerImageUrl = (banner) => {
+  if (!banner.imageId) return banner.imageUrl
+  const version = new Date(banner.updatedAt || Date.now()).getTime()
+  return `/api/banners/${banner._id}/image?v=${version}`
+}
 
 // Get all banners
 const getBanners = asyncHandler(async (req, res) => {
@@ -11,7 +18,7 @@ const getBanners = asyncHandler(async (req, res) => {
   // Add image URL for each banner
   const bannersWithImages = banners.map(banner => ({
     ...banner.toObject(),
-    imageUrl: banner.imageId ? `/api/banners/${banner._id}/image` : banner.imageUrl
+    imageUrl: getBannerImageUrl(banner)
   }))
   
   res.json({
@@ -31,9 +38,7 @@ const getBanner = asyncHandler(async (req, res) => {
   }
   
   const bannerObj = banner.toObject()
-  if (banner.imageId) {
-    bannerObj.imageUrl = `/api/banners/${banner._id}/image`
-  }
+  bannerObj.imageUrl = getBannerImageUrl(banner)
   
   res.json({
     success: true,
@@ -59,7 +64,8 @@ const getBannerImage = asyncHandler(async (req, res) => {
     )
 
     res.set('Content-Type', 'image/jpeg')
-    res.set('Cache-Control', 'public, max-age=3600')
+    // Disable long browser caching so updated banner images reflect quickly.
+    res.set('Cache-Control', 'no-store, max-age=0')
     downloadStream.pipe(res)
 
     downloadStream.on('error', (error) => {
@@ -139,9 +145,9 @@ const createBanner = asyncHandler(async (req, res) => {
   })
 
   const bannerObj = banner.toObject()
-  if (banner.imageId) {
-    bannerObj.imageUrl = `/api/banners/${banner._id}/image`
-  }
+  bannerObj.imageUrl = getBannerImageUrl(banner)
+
+  clearCache('/api/banners')
 
   res.status(201).json({
     success: true,
@@ -216,9 +222,9 @@ const updateBanner = asyncHandler(async (req, res) => {
   banner = await banner.save()
 
   const bannerObj = banner.toObject()
-  if (banner.imageId) {
-    bannerObj.imageUrl = `/api/banners/${banner._id}/image`
-  }
+  bannerObj.imageUrl = getBannerImageUrl(banner)
+
+  clearCache('/api/banners')
 
   res.json({
     success: true,
@@ -252,6 +258,8 @@ const deleteBanner = asyncHandler(async (req, res) => {
     success: true,
     message: 'Banner deleted successfully'
   })
+
+  clearCache('/api/banners')
 })
 
 module.exports = {

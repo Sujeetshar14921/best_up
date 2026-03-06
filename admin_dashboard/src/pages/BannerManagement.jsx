@@ -4,6 +4,13 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+const getAuthConfig = () => {
+  const token = localStorage.getItem('adminToken')
+  return token
+    ? { headers: { Authorization: `Bearer ${token}` } }
+    : {}
+}
+
 export default function BannerManagement() {
   const [banners, setBanners] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -146,18 +153,24 @@ export default function BannerManagement() {
 
       if (editingBanner) {
         await axios.put(`${API_URL}/banners/${editingBanner._id}`, submitData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...(getAuthConfig().headers || {})
+          }
         })
       } else {
         await axios.post(`${API_URL}/banners`, submitData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...(getAuthConfig().headers || {})
+          }
         })
       }
       fetchBanners()
       handleCloseModal()
       setError('')
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save banner')
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to save banner')
       console.error('Error saving banner:', err)
     } finally {
       setLoading(false)
@@ -169,7 +182,7 @@ export default function BannerManagement() {
 
     try {
       setLoading(true)
-      await axios.delete(`${API_URL}/banners/${bannerId}`)
+      await axios.delete(`${API_URL}/banners/${bannerId}`, getAuthConfig())
       fetchBanners()
       setError('')
     } catch (err) {

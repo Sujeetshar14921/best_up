@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Search, Zap, Smartphone } from 'lucide-react'
 import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function SearchSuggestions({ onNavigate }) {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [searchInput, setSearchInput] = useState('')
   const [suggestions, setSuggestions] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -37,20 +39,41 @@ export default function SearchSuggestions({ onNavigate }) {
     }
   }
 
-  const handleSelectPhone = (phoneSlug) => {
+  const goTo = (path) => {
+    if (onNavigate) {
+      onNavigate(path)
+      return
+    }
+    navigate(path)
+  }
+
+  const buildSearchPath = (query) => {
+    const trimmed = (query || '').trim()
+    if (!trimmed) return null
+
+    if (location.pathname === '/compare') {
+      return `/compare?search=${encodeURIComponent(trimmed)}`
+    }
+
+    return `/?search=${encodeURIComponent(trimmed)}#explore-phones`
+  }
+
+  const handleSelectPhone = (phoneName) => {
     setSearchInput('')
     setSuggestions(null)
     setShowSuggestions(false)
-    onNavigate?.(`/phone/${phoneSlug}`)
+    const path = buildSearchPath(phoneName)
+    if (path) goTo(path)
   }
 
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchInput.trim()) {
+      const path = buildSearchPath(searchInput)
       setSearchInput('')
       setSuggestions(null)
       setShowSuggestions(false)
-      onNavigate?.(`/phones?search=${encodeURIComponent(searchInput)}`)
+      if (path) goTo(path)
     }
   }
 
@@ -83,7 +106,7 @@ export default function SearchSuggestions({ onNavigate }) {
                   <button
                     key={phone._id}
                     type="button"
-                    onClick={() => handleSelectPhone(phone.slug)}
+                    onClick={() => handleSelectPhone(phone.name)}
                     className="w-full text-left px-4 py-2 hover:bg-yellow-50 transition-colors flex items-center gap-3"
                   >
                     <Smartphone size={18} className="text-gray-500 flex-shrink-0" />
@@ -103,18 +126,20 @@ export default function SearchSuggestions({ onNavigate }) {
                   🏷️ Brands
                 </div>
                 {suggestions.brands.map(brand => (
-                  <Link
+                  <button
                     key={brand}
-                    to={`/phones?brand=${encodeURIComponent(brand)}`}
+                    type="button"
                     onClick={() => {
                       setSearchInput('')
                       setSuggestions(null)
                       setShowSuggestions(false)
+                      const path = buildSearchPath(brand)
+                      if (path) goTo(path)
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-yellow-50 transition-colors text-sm text-gray-700 hover:text-yellow-600"
                   >
                     {brand}
-                  </Link>
+                  </button>
                 ))}
               </div>
             )}

@@ -162,8 +162,22 @@ export default function TrendingPhones() {
               </Link>
             ))
           ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-600">No trending phones yet</p>
+            <div className="col-span-full">
+              <div className="text-center mb-6">
+                <p className="text-gray-700 font-semibold">No trending phones yet</p>
+                <p className="text-gray-500 text-sm">Admin can mark phones as recommended to show them here.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="bg-white border border-dashed border-gray-300 rounded-2xl h-64 flex flex-col items-center justify-center text-center px-4">
+                    <div className="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-3">
+                      <Zap size={24} />
+                    </div>
+                    <p className="text-sm font-semibold text-gray-700">Trending Card {i + 1}</p>
+                    <p className="text-xs text-gray-500 mt-1">Will appear when phones are set by admin</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowRight, Zap, Smartphone, TrendingUp, Star, Sparkles, Clock, Heart, Cpu } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, ArrowRight, Zap, Smartphone, TrendingUp, Star, Sparkles, Clock, Heart, Cpu, SlidersHorizontal, X } from 'lucide-react'
 import { usePhones } from '../context/PhoneContext'
 import PhoneCard from '../components/PhoneCard'
 import LoadingError from '../components/LoadingError'
@@ -17,17 +17,52 @@ const API_ROOT = API.replace(/\/api\/?$/, '')
 export default function Home() {
   const { phones, loading, error, fetchPhones } = usePhones()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const scrollContainerRef = useRef(null)
   const brandScrollRef = useRef(null)
   const upcomingScrollRef = useRef(null)
   const [brands, setBrands] = useState([])
   const [upcomingPhones, setUpcomingPhones] = useState([])
+  const [showAllBrands, setShowAllBrands] = useState(false)
+  const [showExploreFilters, setShowExploreFilters] = useState(false)
+  const [exploreFilters, setExploreFilters] = useState({
+    brand: '',
+    minPrice: '',
+    maxPrice: '',
+    minRam: '',
+    sort: '-createdAt'
+  })
+  const searchQuery = (searchParams.get('search') || '').trim()
+  const brandQuery = (searchParams.get('brand') || '').trim()
 
   useEffect(() => {
-    fetchPhones({ limit: 20 })
     fetchBrands()
     fetchUpcomingPhones()
   }, [])
+
+  useEffect(() => {
+    const effectiveBrand = brandQuery || exploreFilters.brand
+    const filters = {
+      limit: 100,
+      ...(effectiveBrand ? { brand: effectiveBrand } : {}),
+      ...(searchQuery ? { search: searchQuery } : {}),
+      ...(exploreFilters.minPrice ? { 'price[gte]': exploreFilters.minPrice } : {}),
+      ...(exploreFilters.maxPrice ? { 'price[lte]': exploreFilters.maxPrice } : {}),
+      ...(exploreFilters.minRam ? { 'ram[gte]': exploreFilters.minRam } : {}),
+      ...(exploreFilters.sort ? { sort: exploreFilters.sort } : {})
+    }
+    fetchPhones(filters)
+  }, [fetchPhones, searchQuery, brandQuery, exploreFilters])
+
+  useEffect(() => {
+    if (window.location.hash === '#explore-phones' || searchQuery || brandQuery) {
+      const timer = setTimeout(() => {
+        const section = document.getElementById('explore-phones')
+        section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [searchQuery, brandQuery])
 
   const fetchBrands = async () => {
     try {
@@ -60,6 +95,27 @@ export default function Home() {
   const getFeaturedPhones = () => (phones || []).filter(p => p && !p.isUpcoming && p.scores?.valueForMoney >= 8).slice(0, 10)
   const getPopularPhones = () => (phones || []).filter(p => p && !p.isUpcoming && p.scores?.gaming >= 8).slice(0, 10)
   const getLatestPhones = () => (phones || []).filter(p => p && !p.isUpcoming).slice(0, 10)
+  const getExplorePhones = () => (phones || []).filter(p => p && !p.isUpcoming)
+
+  const handleExploreFilterChange = (key, value) => {
+    setExploreFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const clearExploreFilters = () => {
+    setExploreFilters({
+      brand: '',
+      minPrice: '',
+      maxPrice: '',
+      minRam: '',
+      sort: '-createdAt'
+    })
+  }
+
+  const explorePhones = getExplorePhones()
+  const exactMatchPhones = searchQuery
+    ? explorePhones.filter((p) => (p.name || '').trim().toLowerCase() === searchQuery.toLowerCase())
+    : []
+  const displayExplorePhones = exactMatchPhones.length > 0 ? exactMatchPhones : explorePhones
 
   return (
     <div className="min-h-screen bg-white">
@@ -73,59 +129,237 @@ export default function Home() {
             {/* Section Header */}
             <div className="flex items-center justify-between mb-12">
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900">Featured Mobile Brands</h2>
-              <Link 
-                to="/phones"
+              <button
+                type="button"
+                onClick={() => setShowAllBrands((prev) => !prev)}
                 className="text-lg font-semibold text-yellow-600 hover:text-orange-600 flex items-center gap-2 transition-colors"
               >
-                View All
+                {showAllBrands ? 'Show Less' : 'View All'}
                 <ChevronRight size={24} />
-              </Link>
+              </button>
             </div>
 
             {/* Brands Carousel with Scroll Buttons */}
             <div className="relative overflow-visible">
-              <div
-                ref={brandScrollRef}
-                className="flex gap-6 overflow-x-auto scroll-smooth py-8 px-2 scrollbar-hide"
-              >
-                {brands.map((brand) => (
-                  <div
-                    key={brand._id}
-                    onClick={() => navigate(`/phones?brand=${encodeURIComponent(brand.name)}`)}
-                    className="flex-shrink-0 group cursor-pointer text-center"
-                  >
-                    <div className="w-40 h-40 bg-gray-50 rounded-2xl border-2 border-gray-100 shadow-sm hover:shadow-lg hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group-hover:scale-105 hover:-translate-y-1 mb-4">
-                      <img 
-                        src={brand.logo} 
-                        alt={brand.name}
-                        className="w-28 h-28 object-contain group-hover:scale-110 transition-transform duration-300"
-                        onError={(e) => {
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22112%22 height=%22112%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22112%22 height=%22112%22/%3E%3C/svg%3E'
-                        }}
-                      />
+              {showAllBrands ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 py-4">
+                  {brands.map((brand) => (
+                    <div
+                      key={brand._id}
+                      onClick={() => navigate(`/?brand=${encodeURIComponent(brand.name)}#explore-phones`)}
+                      className="group cursor-pointer text-center"
+                    >
+                      <div className="w-40 h-40 mx-auto bg-gray-50 rounded-2xl border-2 border-gray-100 shadow-sm hover:shadow-lg hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group-hover:scale-105 hover:-translate-y-1 mb-4">
+                        <img
+                          src={brand.logo}
+                          alt={brand.name}
+                          className="w-28 h-28 object-contain group-hover:scale-110 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22112%22 height=%22112%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22112%22 height=%22112%22/%3E%3C/svg%3E'
+                          }}
+                        />
+                      </div>
+                      <p className="text-gray-700 font-semibold text-base group-hover:text-yellow-600 transition-colors line-clamp-1">{brand.name}</p>
                     </div>
-                    <p className="text-gray-700 font-semibold text-base group-hover:text-yellow-600 transition-colors line-clamp-1">{brand.name}</p>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div
+                    ref={brandScrollRef}
+                    className="flex gap-6 overflow-x-auto scroll-smooth py-8 px-2 scrollbar-hide"
+                  >
+                    {brands.map((brand) => (
+                      <div
+                        key={brand._id}
+                        onClick={() => navigate(`/?brand=${encodeURIComponent(brand.name)}#explore-phones`)}
+                        className="flex-shrink-0 group cursor-pointer text-center"
+                      >
+                        <div className="w-40 h-40 bg-gray-50 rounded-2xl border-2 border-gray-100 shadow-sm hover:shadow-lg hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group-hover:scale-105 hover:-translate-y-1 mb-4">
+                          <img
+                            src={brand.logo}
+                            alt={brand.name}
+                            className="w-28 h-28 object-contain group-hover:scale-110 transition-transform duration-300"
+                            onError={(e) => {
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22112%22 height=%22112%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22112%22 height=%22112%22/%3E%3C/svg%3E'
+                            }}
+                          />
+                        </div>
+                        <p className="text-gray-700 font-semibold text-base group-hover:text-yellow-600 transition-colors line-clamp-1">{brand.name}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              {/* Scroll Buttons */}
-              <button
-                onClick={() => scroll(brandScrollRef, 'left')}
-                className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-16 bg-transparent text-gray-400 p-2 rounded-full transition-all hover:scale-110 z-10 hover:text-gray-700"
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button
-                onClick={() => scroll(brandScrollRef, 'right')}
-                className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-16 bg-transparent text-gray-400 p-2 rounded-full transition-all hover:scale-110 z-10 hover:text-gray-700"
-              >
-                <ChevronRight size={24} />
-              </button>
+                  {/* Scroll Buttons */}
+                  <button
+                    onClick={() => scroll(brandScrollRef, 'left')}
+                    className="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-16 bg-transparent text-gray-400 p-2 rounded-full transition-all hover:scale-110 z-10 hover:text-gray-700"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    onClick={() => scroll(brandScrollRef, 'right')}
+                    className="absolute right-0 top-1/3 -translate-y-1/2 translate-x-16 bg-transparent text-gray-400 p-2 rounded-full transition-all hover:scale-110 z-10 hover:text-gray-700"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </section>
       )}
+
+      {/* Explore Phones Section (moved from Explore page intent) */}
+      <section id="explore-phones" className="py-16 px-4 bg-gray-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">Explore Phones</h2>
+            <p className="text-gray-600 text-lg">
+              {brandQuery
+                ? `Showing ${brandQuery} phones`
+                : searchQuery
+                ? `Search results for "${searchQuery}"`
+                : 'Use the navbar search to find and explore phones here'}
+            </p>
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowExploreFilters(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-gray-200 text-gray-700 font-semibold hover:bg-yellow-50 hover:border-yellow-300 transition-colors"
+              >
+                <SlidersHorizontal size={18} />
+                Filter Results
+              </button>
+            </div>
+          </div>
+
+          <LoadingError loading={loading} error={error}>
+            {displayExplorePhones.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
+                <p className="text-gray-700 text-lg mb-2">No phones found</p>
+                <p className="text-gray-500 text-sm">Try a different phone name or brand in the top search bar.</p>
+              </div>
+            ) : (
+              <div className="flex flex-nowrap overflow-x-auto gap-6 py-2 scrollbar-hide">
+                {displayExplorePhones.slice(0, 24).map((phone) => (
+                  <div key={phone._id} className="flex-shrink-0 w-56">
+                    <PhoneCard phone={phone} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </LoadingError>
+        </div>
+
+        {showExploreFilters && (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-100">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900">Filter Explore Phones</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowExploreFilters(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Brand</label>
+                  <select
+                    value={exploreFilters.brand}
+                    onChange={(e) => handleExploreFilterChange('brand', e.target.value)}
+                    disabled={Boolean(brandQuery)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500 disabled:bg-gray-100 disabled:text-gray-500"
+                  >
+                    <option value="">All Brands</option>
+                    {brands.map((b) => (
+                      <option key={b._id} value={b.name}>{b.name}</option>
+                    ))}
+                  </select>
+                  {brandQuery && (
+                    <p className="mt-1 text-xs text-gray-500">Brand is locked from selected logo: {brandQuery}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Price (INR)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={exploreFilters.minPrice}
+                    onChange={(e) => handleExploreFilterChange('minPrice', e.target.value)}
+                    placeholder="10000"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Price (INR)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={exploreFilters.maxPrice}
+                    onChange={(e) => handleExploreFilterChange('maxPrice', e.target.value)}
+                    placeholder="50000"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Minimum RAM</label>
+                  <select
+                    value={exploreFilters.minRam}
+                    onChange={(e) => handleExploreFilterChange('minRam', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500"
+                  >
+                    <option value="">Any</option>
+                    <option value="4">4GB</option>
+                    <option value="6">6GB</option>
+                    <option value="8">8GB</option>
+                    <option value="12">12GB</option>
+                    <option value="16">16GB</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Sort</label>
+                  <select
+                    value={exploreFilters.sort}
+                    onChange={(e) => handleExploreFilterChange('sort', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-yellow-500"
+                  >
+                    <option value="-createdAt">Newest</option>
+                    <option value="basePrice">Price: Low to High</option>
+                    <option value="-basePrice">Price: High to Low</option>
+                    <option value="name">Name A-Z</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={clearExploreFilters}
+                  className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowExploreFilters(false)}
+                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-semibold"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Featured Phones Section */}
       <section className="py-16 px-4 bg-white">

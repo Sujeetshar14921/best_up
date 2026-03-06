@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Smartphone, Zap, BarChart3, Menu, X, GitCompare, Search } from 'lucide-react'
+import { Smartphone, Zap, Menu, X, GitCompare } from 'lucide-react'
 import SearchSuggestions from './SearchSuggestions'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,13 +9,19 @@ export default function Header() {
   const location = useLocation()
   const { isAuthenticated, user, logout } = useAuth()
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => {
+    if (path.includes('#')) {
+      const [pathname, hash] = path.split('#')
+      return location.pathname === pathname && location.hash === `#${hash}`
+    }
+    return location.pathname === path
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-lg border-b-2 border-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center gap-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+        <Link to="/" className="flex items-center gap-0 group flex-shrink-0">
           <div className="text-2xl font-bold">
             <span className="text-yellow-500">Best</span>
             <span className="text-orange-600">Up</span>
@@ -31,8 +37,6 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-2">
           {[
             { path: '/', label: 'Home', icon: Zap },
-            { path: '/phones', label: 'Explore', icon: Search },
-            { path: '/recommend', label: 'Recommendations', icon: BarChart3 },
             { path: '/compare', label: 'Compare', icon: GitCompare }
           ].map(({ path, label, icon: Icon }) => (
             <Link
@@ -84,8 +88,6 @@ export default function Header() {
             <nav className="flex flex-col gap-2">
               {[
                 { path: '/', label: 'Home' },
-                { path: '/phones', label: 'Explore' },
-                { path: '/recommend', label: 'Recommendations' },
                 { path: '/compare', label: 'Compare' }
               ].map(({ path, label }) => (
                 <Link

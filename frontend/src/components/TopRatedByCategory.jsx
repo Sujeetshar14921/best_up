@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { Gamepad2, Camera, Battery, Zap, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import axios from 'axios'
 import PhoneCard from './PhoneCard'
@@ -16,12 +15,18 @@ const CATEGORIES = [
 
 export default function TopRatedByCategory() {
   const [selectedCategory, setSelectedCategory] = useState('gaming')
+  const [showAll, setShowAll] = useState(false)
   const [phones, setPhones] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     fetchTopPhones()
+  }, [selectedCategory, showAll])
+
+  useEffect(() => {
+    // Reset in-place expansion whenever category changes.
+    setShowAll(false)
   }, [selectedCategory])
 
   const fetchTopPhones = async () => {
@@ -31,7 +36,7 @@ export default function TopRatedByCategory() {
       const response = await axios.get(`${API}/analytics/top-rated`, {
         params: {
           category: selectedCategory,
-          limit: 10
+          limit: showAll ? 100 : 10
         }
       })
       setPhones(response.data.data || [])
@@ -122,13 +127,14 @@ export default function TopRatedByCategory() {
 
             {/* View All Link */}
             <div className="text-center mt-12">
-              <Link
-                to={`/phones?sort=${selectedCategory}-desc`}
+              <button
+                type="button"
+                onClick={() => setShowAll(prev => !prev)}
                 className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-bold rounded-lg hover:shadow-lg transition-all hover:scale-105"
               >
-                View All {CATEGORIES.find(c => c.id === selectedCategory)?.label.split(' ')[1]} Phones
+                {showAll ? 'Show Top 10' : `View All ${CATEGORIES.find(c => c.id === selectedCategory)?.label.split(' ')[1]} Phones`}
                 <ChevronRight size={20} />
-              </Link>
+              </button>
             </div>
           </div>
         )}

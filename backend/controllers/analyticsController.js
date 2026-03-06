@@ -15,9 +15,65 @@ const asyncHandler = require('../middleware/asyncHandler');
  */
 const getTrendingPhones = asyncHandler(async (req, res) => {
   const { limit = 10, timeframe = '7d' } = req.query;
-
-  const timeMs = timeframe === '7d' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+  const parsedLimit = parseInt(limit);
+  const timeframeDays = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : timeframe === '90d' ? 90 : 30;
+  const timeMs = timeframeDays * 24 * 60 * 60 * 1000;
   const since = new Date(Date.now() - timeMs);
+
+  // Admin-controlled trending phones take priority when configured.
+  // Timeframe is monitored using the latest admin update window.
+  const adminControlled = await Phone.find({
+    recommended: true,
+    isUpcoming: { $ne: true },
+    updatedAt: { $gte: since },
+  })
+    .select('name brand basePrice scores variants slug imageId')
+    .sort({ updatedAt: -1 })
+    .limit(parsedLimit);
+
+  if (adminControlled.length > 0) {
+    const result = adminControlled.map((phone, idx) => ({
+      ...phone.toObject(),
+      reviewCount: 0,
+      avgRating: (phone?.scores?.valueForMoney || 0).toFixed(2),
+      trendScore: (phone?.scores?.valueForMoney || 0) + (adminControlled.length - idx) * 0.01,
+      isAdminControlled: true,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      timeframe,
+      count: result.length,
+      source: 'admin-controlled',
+      data: result,
+    });
+  }
+
+  // If admin-selected phones exist but not updated in this timeframe,
+  // still show them so the section is never empty.
+  const adminControlledAnyTime = await Phone.find({ recommended: true, isUpcoming: { $ne: true } })
+    .select('name brand basePrice scores variants slug imageId')
+    .sort({ updatedAt: -1 })
+    .limit(parsedLimit);
+
+  if (adminControlledAnyTime.length > 0) {
+    const result = adminControlledAnyTime.map((phone, idx) => ({
+      ...phone.toObject(),
+      reviewCount: 0,
+      avgRating: (phone?.scores?.valueForMoney || 0).toFixed(2),
+      trendScore: (phone?.scores?.valueForMoney || 0) + (adminControlledAnyTime.length - idx) * 0.01,
+      isAdminControlled: true,
+      timeframeFallback: true,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      timeframe,
+      count: result.length,
+      source: 'admin-controlled-fallback',
+      data: result,
+    });
+  }
 
   // Get reviews grouped by phone
   const trendingData = await Review.aggregate([
@@ -37,7 +93,7 @@ const getTrendingPhones = asyncHandler(async (req, res) => {
       $sort: { count: -1 }
     },
     {
-      $limit: parseInt(limit)
+      $limit: parsedLimit
     }
   ]);
 
@@ -48,19 +104,43 @@ const getTrendingPhones = asyncHandler(async (req, res) => {
   // Merge data
   const result = trendingData.map(trend => {
     const phone = phones.find(p => p._id.toString() === trend._id.toString());
+    if (!phone) return null;
     return {
       ...phone?.toObject(),
       reviewCount: trend.count,
       avgRating: trend.avgRating.toFixed(2),
       trendScore: trend.count * (trend.avgRating / 5) // Popularity score
     };
-  }).sort((a, b) => b.trendScore - a.trendScore);
+  }).filter(Boolean).sort((a, b) => b.trendScore - a.trendScore);
+
+  if (result.length > 0) {
+    return res.status(200).json({
+      success: true,
+      timeframe,
+      count: result.length,
+      source: 'reviews',
+      data: result
+    });
+  }
+
+  // Final fallback for fresh databases with no reviews/admin picks.
+  const fallbackPhones = await Phone.find({ isUpcoming: { $ne: true } })
+    .select('name brand basePrice scores variants slug imageId')
+    .sort({ 'scores.valueForMoney': -1, createdAt: -1 })
+    .limit(parsedLimit);
 
   res.status(200).json({
     success: true,
     timeframe,
-    count: result.length,
-    data: result
+    count: fallbackPhones.length,
+    source: 'score-fallback',
+    data: fallbackPhones.map((phone, idx) => ({
+      ...phone.toObject(),
+      reviewCount: 0,
+      avgRating: (phone?.scores?.valueForMoney || 0).toFixed(2),
+      trendScore: (phone?.scores?.valueForMoney || 0) + (fallbackPhones.length - idx) * 0.01,
+      isFallback: true,
+    }))
   });
 });
 

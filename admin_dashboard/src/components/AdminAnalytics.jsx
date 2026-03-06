@@ -5,7 +5,15 @@ import axios from 'axios'
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const AdminAnalytics = () => {
-  const [analytics, setAnalytics] = useState(null)
+  const [analytics, setAnalytics] = useState({
+    totalPhones: 0,
+    activeUsers: 0,
+    trendingCount: 0,
+    avgRating: 0,
+    wishlistCount: 0,
+    reviewCount: 0,
+    topPhones: []
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [timeframe, setTimeframe] = useState('7d')
@@ -17,10 +25,39 @@ const AdminAnalytics = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API}/analytics/trending`, {
-        params: { timeframe }
+      const [statsRes, trendingRes, usersRes] = await Promise.all([
+        axios.get(`${API}/stats`),
+        axios.get(`${API}/analytics/trending`, {
+          params: { timeframe, limit: 10 }
+        }),
+        // Admin-authenticated endpoint. If token is missing, fallback below keeps values safe.
+        axios.get(`${API}/users`).catch(() => ({ data: { data: [] } }))
+      ])
+
+      const stats = statsRes?.data?.stats || {}
+      const topPhones = trendingRes?.data?.data || []
+      const users = usersRes?.data?.data || []
+
+      const activeUsers = users.length > 0
+        ? users.filter((u) => u.isActive).length
+        : (stats.totalUsers || 0)
+
+      const reviewCount = stats.totalReviews || 0
+      const avgRating = topPhones.length > 0
+        ? (topPhones.reduce((sum, p) => sum + Number(p?.scores?.valueForMoney || 0), 0) / topPhones.length)
+        : 0
+
+      const wishlistCount = users.reduce((sum, u) => sum + (Array.isArray(u.wishlist) ? u.wishlist.length : 0), 0)
+
+      setAnalytics({
+        totalPhones: stats.totalPhones || 0,
+        activeUsers,
+        trendingCount: topPhones.length,
+        avgRating,
+        wishlistCount,
+        reviewCount,
+        topPhones
       })
-      setAnalytics(response.data.data)
       setError(null)
     } catch (err) {
       console.error('Error fetching analytics:', err)
