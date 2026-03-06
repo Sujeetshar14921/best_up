@@ -13,6 +13,14 @@ const CATEGORIES = [
   { id: 'valueForMoney', label: '💰 Value', icon: TrendingUp, color: 'from-red-500 to-orange-500' }
 ]
 
+const CATEGORY_SORT_MAP = {
+  gaming: '-scores.gaming',
+  camera: '-scores.camera',
+  battery: '-scores.battery',
+  display: '-scores.display',
+  valueForMoney: '-scores.valueForMoney'
+}
+
 export default function TopRatedByCategory() {
   const [selectedCategory, setSelectedCategory] = useState('gaming')
   const [showAll, setShowAll] = useState(false)
@@ -33,10 +41,10 @@ export default function TopRatedByCategory() {
     try {
       setLoading(true)
       setError(null)
-      const response = await axios.get(`${API}/analytics/top-rated`, {
+      const response = await axios.get(`${API}/phones`, {
         params: {
-          category: selectedCategory,
-          limit: showAll ? 100 : 10
+          limit: showAll ? 100 : 10,
+          sort: CATEGORY_SORT_MAP[selectedCategory] || '-scores.valueForMoney'
         }
       })
       setPhones(response.data.data || [])

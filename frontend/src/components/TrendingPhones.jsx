@@ -18,13 +18,18 @@ export default function TrendingPhones() {
   const fetchTrendingPhones = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API}/analytics/trending`, {
+      const response = await axios.get(`${API}/phones`, {
         params: {
           limit: 10,
-          timeframe
+          sort: '-scores.valueForMoney'
         }
       })
-      setPhones(response.data.data || [])
+      const normalized = (response.data.data || []).map((phone, idx) => ({
+        ...phone,
+        reviewCount: 0,
+        trendScore: (phone?.scores?.valueForMoney || 0) + (10 - idx) * 0.01
+      }))
+      setPhones(normalized)
       setError(null)
     } catch (err) {
       console.error('Error fetching trending phones:', err)

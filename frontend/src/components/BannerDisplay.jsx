@@ -2,6 +2,14 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_ROOT = API.replace(/\/api\/?$/, '')
+
+const resolveBannerImageUrl = (imageUrl) => {
+  if (!imageUrl) return imageUrl
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl
+  if (imageUrl.startsWith('/')) return `${API_ROOT}${imageUrl}`
+  return `${API_ROOT}/${imageUrl}`
+}
 
 // Component to display vertical banners (shown at top)
 export function VerticalBannersSection() {
@@ -45,7 +53,7 @@ export function VerticalBannersSection() {
               className="group relative overflow-hidden rounded-2xl transition-all duration-300 block h-80 shadow-lg hover:shadow-2xl border border-gray-100 hover:border-yellow-400 transform group-hover:scale-105 group-hover:-translate-y-2"
             >
               <img
-                src={banner.imageUrl}
+                src={resolveBannerImageUrl(banner.imageUrl)}
                 alt={banner.title}
                 className="w-full h-full object-cover group-hover:scale-120 transition-transform duration-500"
                 onError={(e) => {
@@ -117,7 +125,7 @@ export function HorizontalBannersSection() {
             >
               <div className="relative h-40 bg-gradient-to-br from-gray-200 to-gray-300">
                 <img
-                  src={banner.imageUrl}
+                  src={resolveBannerImageUrl(banner.imageUrl)}
                   alt={banner.title}
                   className="w-full h-full object-cover group-hover:scale-120 transition-transform duration-500"
                   onError={(e) => {

@@ -12,6 +12,13 @@ const SEGMENTS = [
   { name: 'Flagship', range: '₹80K+', color: 'from-red-400 to-orange-600', icon: '🔥', maxPrice: Infinity }
 ]
 
+const getSegmentName = (price) => {
+  if (price <= 15000) return 'Budget'
+  if (price <= 40000) return 'Mid-Range'
+  if (price <= 80000) return 'Premium'
+  return 'Flagship'
+}
+
 export default function PriceSegmentAnalysis() {
   const [segments, setSegments] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,8 +31,32 @@ export default function PriceSegmentAnalysis() {
   const fetchSegmentData = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API}/analytics/by-segment`)
-      setSegments(response.data.data)
+      const phonesResponse = await axios.get(`${API}/phones`, {
+        params: { limit: 500 }
+      })
+      const phones = phonesResponse.data.data || []
+
+      const aggregate = {
+        Budget: { count: 0, scoreSum: 0 },
+        'Mid-Range': { count: 0, scoreSum: 0 },
+        Premium: { count: 0, scoreSum: 0 },
+        Flagship: { count: 0, scoreSum: 0 }
+      }
+
+      phones.forEach((phone) => {
+        const segment = getSegmentName(phone.basePrice || 0)
+        aggregate[segment].count += 1
+        aggregate[segment].scoreSum += phone?.scores?.valueForMoney || 0
+      })
+
+      const fallbackSegments = Object.fromEntries(
+        Object.entries(aggregate).map(([name, value]) => {
+          const avgScore = value.count > 0 ? value.scoreSum / value.count : 0
+          return [name, { count: value.count, avgScore }]
+        })
+      )
+
+      setSegments(fallbackSegments)
     } catch (err) {
       console.error('Error fetching segment data:', err)
       setError('Failed to load segment data')
