@@ -1,11 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowRight, Zap, Smartphone, TrendingUp, Star, Sparkles, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, Zap, Smartphone, TrendingUp, Star, Sparkles, Clock, Heart, Cpu } from 'lucide-react'
 import { usePhones } from '../context/PhoneContext'
 import PhoneCard from '../components/PhoneCard'
 import LoadingError from '../components/LoadingError'
 import BannerDisplay, { HorizontalBannersSection } from '../components/BannerDisplay'
+import TrendingPhones from '../components/TrendingPhones'
+import TopRatedByCategory from '../components/TopRatedByCategory'
+import PriceSegmentAnalysis from '../components/PriceSegmentAnalysis'
+import SearchSuggestions from '../components/SearchSuggestions'
 import axios from 'axios'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_ROOT = API.replace(/\/api\/?$/, '')
 
 export default function Home() {
   const { phones, loading, error, fetchPhones } = usePhones()
@@ -24,7 +31,7 @@ export default function Home() {
 
   const fetchBrands = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/brands')
+      const response = await axios.get(`${API}/brands`)
       setBrands(response.data.data || [])
     } catch (err) {
       console.error('Failed to fetch brands:', err)
@@ -33,7 +40,7 @@ export default function Home() {
 
   const fetchUpcomingPhones = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/phones?isUpcoming=true&limit=10')
+      const response = await axios.get(`${API}/phones?isUpcoming=true&limit=10`)
       setUpcomingPhones(response.data.data || [])
     } catch (err) {
       console.error('Failed to fetch upcoming phones:', err)
@@ -293,6 +300,15 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trending Phones Section */}
+      <TrendingPhones />
+
+      {/* Top Rated by Category Section */}
+      <TopRatedByCategory />
+
+      {/* Price Segment Analysis Section */}
+      <PriceSegmentAnalysis />
+
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-orange-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -317,66 +333,106 @@ export default function Home() {
 
 // Upcoming Phone Card Component
 function UpcomingPhoneCard({ phone }) {
+  const [isFavorite, setIsFavorite] = useState(false)
+  
   const launchDate = phone.launchDate ? new Date(phone.launchDate) : null
   const daysUntilLaunch = launchDate ? Math.ceil((launchDate - new Date()) / (1000 * 60 * 60 * 24)) : null
+  const phoneSlug = phone.slug || phone.name.toLowerCase().replace(/\s+/g, '-')
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault()
+    setIsFavorite(!isFavorite)
+  }
 
   return (
-    <div className="group bg-gradient-to-b from-gray-50 to-white rounded-2xl overflow-visible shadow-lg hover:shadow-2xl border border-gray-100 group-hover:border-yellow-400 transition-all duration-300 transform group-hover:scale-105 group-hover:-translate-y-2 h-full flex flex-col">
-      {/* Image Container */}
-      <div className="relative bg-gradient-to-b from-gray-50 to-white h-48 overflow-hidden flex items-center justify-center rounded-t-2xl">
+    <Link
+      to={`/phone/${phoneSlug}`}
+      className="group flex flex-col h-full bg-white rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 transform group-hover:scale-105 group-hover:-translate-y-2 border border-gray-100 hover:border-yellow-400 relative"
+    >
+      {/* Top Action Button */}
+      <div className="absolute top-2 right-2 flex gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <button
+          onClick={handleFavoriteClick}
+          className={`p-1.5 rounded-full backdrop-blur-sm transition-all duration-300 ${
+            isFavorite
+              ? 'bg-red-500 text-white shadow-lg'
+              : 'bg-white/90 text-gray-700 hover:bg-red-50'
+          }`}
+          title="Add to favorites"
+        >
+          <Heart size={16} className={isFavorite ? 'fill-white' : ''} />
+        </button>
+      </div>
+
+      {/* Coming Soon Badge */}
+      <div className="absolute top-2 left-2 flex gap-1.5 z-10">
+        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+          <Sparkles size={12} />
+          <span className="text-xs font-bold">Coming</span>
+        </div>
+      </div>
+
+      {/* Phone Image Section */}
+      <div className="relative h-40 flex items-center justify-center rounded-t-2xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden border-b border-gray-200">
         {phone.imageId ? (
           <img
-            src={`http://localhost:5000/api/phones/admin/phones/${phone._id}/image`}
+            src={`${API_ROOT}/api/phones/admin/phones/${phone._id}/image`}
             alt={phone.name}
-            className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-auto h-32 max-w-full max-h-full object-contain group-hover:scale-120 transition-transform duration-500 mx-auto"
             style={{ display: 'block' }}
             onError={(e) => {
               e.target.style.display = 'none'
             }}
           />
         ) : (
-          <Smartphone size={64} className="text-gray-400 group-hover:text-yellow-400 transition-colors duration-300" />
+          <Smartphone size={64} className="text-gray-400 group-hover:text-yellow-500 transition-colors duration-300 mx-auto" />
         )}
-        
-        {/* Coming Soon Badge */}
-        <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-          <Sparkles size={14} />
-          Coming
+      </div>
+
+      {/* Content Section */}
+      <div className="flex flex-col flex-1 gap-2 p-4">
+        {/* Phone Name */}
+        <div>
+          <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-yellow-600 transition-colors duration-300 text-sm mb-0.5">
+            {phone.name}
+          </h3>
+          {phone.brand && (
+            <p className="text-xs text-gray-500 font-medium">{phone.brand}</p>
+          )}
         </div>
 
-        {/* Launch Date Badge */}
-        {daysUntilLaunch !== null && (
-          <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur text-white px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1">
-            <Clock size={14} />
-            {daysUntilLaunch > 0 ? `${daysUntilLaunch} days` : 'Launching soon'}
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4 flex-1 flex flex-col">
-        <p className="text-yellow-600 text-xs font-bold uppercase tracking-wider mb-2 group-hover:text-orange-600 transition-colors duration-300">{phone.brand}</p>
-        <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-3 group-hover:text-yellow-600 transition-colors duration-300">{phone.name}</h3>
-
+        {/* Overview */}
         {phone.overview && (
-          <p className="text-gray-600 text-xs line-clamp-2 mb-4 flex-1">{phone.overview}</p>
+          <p className="text-gray-600 text-xs line-clamp-2 mb-1 flex-1">{phone.overview}</p>
         )}
 
-        {phone.basePrice && (
-          <div className="mb-4 pt-4 border-t border-gray-100">
-            <p className="text-gray-500 text-xs mb-1">Expected Price</p>
-            <p className="text-lg font-bold text-gray-900">₹{(phone.basePrice / 100000).toFixed(1)}L</p>
+        {/* Launch Date Info */}
+        {daysUntilLaunch !== null && (
+          <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1.5 mb-1">
+            <Clock size={13} className="text-blue-600" />
+            <span className="text-xs font-semibold text-blue-700">
+              {daysUntilLaunch > 0 ? `${daysUntilLaunch} days left` : 'Launching very soon!'}
+            </span>
           </div>
         )}
 
-        <Link
-          to={`/phone/${phone.slug}`}
-          className="inline-flex items-center justify-center gap-2 w-full py-2 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all hover:scale-105"
-        >
-          View Details
-          <ArrowRight size={16} />
-        </Link>
+        {/* Price Section */}
+        <div className="border-t border-gray-200 pt-2.5 mt-auto">
+          {phone.basePrice && (
+            <>
+              <p className="text-xs text-gray-500 font-semibold mb-0.5">Expected Price</p>
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                  ₹{(phone.basePrice / 100000).toFixed(1)}L
+                </p>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-600 flex items-center justify-center group-hover:shadow-lg transition-all group-hover:scale-110 shadow-md">
+                  <Zap size={18} className="text-white fill-white" />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }

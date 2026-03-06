@@ -9,6 +9,14 @@ const api = axios.create({
   }
 })
 
+export const setApiAuthToken = (token) => {
+  if (token) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`
+  } else {
+    delete api.defaults.headers.common.Authorization
+  }
+}
+
 // Phones API
 export const phonesAPI = {
   // Get all phones with filters
@@ -42,6 +50,14 @@ export const phonesAPI = {
 
   // Delete phone (admin)
   deletePhone: (slug) => api.delete(`/phones/${slug}`)
+}
+
+export const authAPI = {
+  register: (payload) => api.post('/auth/register', payload),
+  login: (payload) => api.post('/auth/login', payload),
+  forgotPassword: (payload) => api.post('/auth/forgot-password', payload),
+  resetPassword: (payload) => api.post('/auth/reset-password', payload),
+  getMe: () => api.get('/auth/me')
 }
 
 export default api

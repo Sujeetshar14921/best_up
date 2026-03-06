@@ -12,9 +12,11 @@ const {
 router.get('/', getAllBrands);
 router.get('/:id', getBrandById);
 
-// Admin routes (will add middleware later)
-router.post('/', createBrand);
-router.put('/:id', updateBrand);
-router.delete('/:id', deleteBrand);
+const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+
+// Admin routes
+router.post('/', verifyToken, isAdmin, createBrand);
+router.put('/:id', verifyToken, isAdmin, updateBrand);
+router.delete('/:id', verifyToken, isAdmin, deleteBrand);
 
 module.exports = router;

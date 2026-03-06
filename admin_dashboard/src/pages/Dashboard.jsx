@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react'
 import { useAdmin } from '../context/AdminContext'
 import { BarChart3, Users, Package } from 'lucide-react'
+import AdminAnalytics from '../components/AdminAnalytics'
+import HealthStatus from '../components/HealthStatus'
 
 export default function Dashboard() {
   const { brands, users, fetchBrands, fetchUsers } = useAdmin()
@@ -83,6 +85,16 @@ export default function Dashboard() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Health Status Widget */}
+      <div className="bg-white rounded-lg shadow-card p-6">
+        <HealthStatus showDetails={true} />
+      </div>
+
+      {/* Analytics Dashboard */}
+      <div className="bg-white rounded-lg shadow-card p-6">
+        <AdminAnalytics />
       </div>
 
       {/* Info Cards */}

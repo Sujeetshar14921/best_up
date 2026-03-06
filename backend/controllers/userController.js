@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { generateToken } = require('../middleware/authMiddleware');
 
 // Get all users (admin only)
 exports.getAllUsers = async (req, res) => {
@@ -104,6 +105,35 @@ exports.deactivateUser = async (req, res) => {
   }
 };
 
+// Activate user (admin only)
+exports.activateUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive: true },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User activated',
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 // Delete user (admin only)
 exports.deleteUser = async (req, res) => {
   try {
@@ -195,9 +225,12 @@ exports.loginUser = async (req, res) => {
       });
     }
 
+    const token = generateToken(user._id, user.role);
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
+      token,
       data: {
         id: user._id,
         name: user.name,

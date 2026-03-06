@@ -35,9 +35,11 @@ router.get('/', getBanners)
 router.get('/:id', getBanner)
 router.get('/:id/image', getBannerImage)
 
+const { verifyToken, isAdmin } = require('../middleware/authMiddleware')
+
 // Admin routes
-router.post('/', upload.single('image'), createBanner)
-router.put('/:id', upload.single('image'), updateBanner)
-router.delete('/:id', deleteBanner)
+router.post('/', verifyToken, isAdmin, upload.single('image'), createBanner)
+router.put('/:id', verifyToken, isAdmin, upload.single('image'), updateBanner)
+router.delete('/:id', verifyToken, isAdmin, deleteBanner)
 
 module.exports = router

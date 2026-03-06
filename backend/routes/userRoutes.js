@@ -5,6 +5,7 @@ const {
   getUserById,
   updateUserRole,
   deactivateUser,
+  activateUser,
   deleteUser,
   registerUser,
   loginUser,
@@ -15,10 +16,13 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 // Admin routes (will add middleware later)
-router.get('/', getAllUsers);
-router.get('/:id', getUserById);
-router.put('/:id/role', updateUserRole);
-router.put('/:id/deactivate', deactivateUser);
-router.delete('/:id', deleteUser);
+const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+
+router.get('/', verifyToken, isAdmin, getAllUsers);
+router.get('/:id', verifyToken, isAdmin, getUserById);
+router.put('/:id/role', verifyToken, isAdmin, updateUserRole);
+router.put('/:id/deactivate', verifyToken, isAdmin, deactivateUser);
+router.put('/:id/activate', verifyToken, isAdmin, activateUser);
+router.delete('/:id', verifyToken, isAdmin, deleteUser);
 
 module.exports = router;

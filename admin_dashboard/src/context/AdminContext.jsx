@@ -3,6 +3,14 @@ import axios from 'axios'
 
 const AdminContext = createContext()
 
+const setAxiosAuthToken = (token) => {
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  } else {
+    delete axios.defaults.headers.common['Authorization']
+  }
+}
+
 export const AdminProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null)
   const [brands, setBrands] = useState([])
@@ -16,13 +24,43 @@ export const AdminProvider = ({ children }) => {
   // Restore admin from localStorage on mount
   useEffect(() => {
     const storedAdmin = localStorage.getItem('admin')
-    if (storedAdmin) {
+    const storedToken = localStorage.getItem('adminToken')
+
+    if (storedAdmin && storedToken) {
       try {
         setAdmin(JSON.parse(storedAdmin))
+        setAxiosAuthToken(storedToken)
       } catch (err) {
         console.error('Failed to restore admin session:', err)
         localStorage.removeItem('admin')
+        localStorage.removeItem('adminToken')
+        setAxiosAuthToken(null)
       }
+    } else if (storedAdmin && !storedToken) {
+      // Prevent stale UI session without auth token.
+      localStorage.removeItem('admin')
+      setAdmin(null)
+      setAxiosAuthToken(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (err) => {
+        if (err?.response?.status === 401) {
+          setAdmin(null)
+          localStorage.removeItem('admin')
+          localStorage.removeItem('adminToken')
+          setAxiosAuthToken(null)
+          setError('Session expired. Please login again.')
+        }
+        return Promise.reject(err)
+      }
+    )
+
+    return () => {
+      axios.interceptors.response.eject(interceptorId)
     }
   }, [])
 
@@ -32,9 +70,19 @@ export const AdminProvider = ({ children }) => {
     setError(null)
     try {
       const response = await axios.post(`${API}/users/login`, { email, password })
-      if (response.data.data.role === 'admin') {
-        setAdmin(response.data.data)
-        localStorage.setItem('admin', JSON.stringify(response.data.data))
+      const token = response.data.token || response.data.data?.token || response.data.user?.token || null
+      const user = response.data.data || response.data.user || null
+
+      if (user && user.role === 'admin') {
+        if (!token) {
+          setError('Login response missing token. Please contact backend support.')
+          return false
+        }
+
+        setAdmin(user)
+        localStorage.setItem('admin', JSON.stringify(user))
+        localStorage.setItem('adminToken', token)
+        setAxiosAuthToken(token)
         return true
       } else {
         setError('Not an admin account')
@@ -51,6 +99,8 @@ export const AdminProvider = ({ children }) => {
   const logoutAdmin = useCallback(() => {
     setAdmin(null)
     localStorage.removeItem('admin')
+    localStorage.removeItem('adminToken')
+    setAxiosAuthToken(null)
   }, [])
 
   // Brand Management
@@ -154,6 +204,20 @@ export const AdminProvider = ({ children }) => {
     }
   }, [users])
 
+  const activateUser = useCallback(async (id) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await axios.put(`${API}/users/${id}/activate`, {})
+      setUsers(users.map(u => u._id === id ? response.data.data : u))
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to activate user')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [users])
+
   const deleteUser = useCallback(async (id) => {
     setLoading(true)
     setError(null)
@@ -184,6 +248,7 @@ export const AdminProvider = ({ children }) => {
     fetchUsers,
     updateUserRole,
     deactivateUser,
+    activateUser,
     deleteUser,
   }
 

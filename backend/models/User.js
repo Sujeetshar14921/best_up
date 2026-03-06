@@ -36,6 +36,33 @@ const userSchema = new mongoose.Schema(
         ref: 'Phone',
       },
     ],
+    
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Phone',
+      },
+    ],
+
+    comparisonList: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Phone',
+      },
+    ],
+
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    emailVerificationToken: String,
+    emailVerificationExpiry: Date,
+
+    resetPasswordToken: String,
+    resetPasswordExpiry: Date,
+
+    lastLogin: Date,
   },
   { timestamps: true }
 );

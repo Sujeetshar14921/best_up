@@ -1,15 +1,18 @@
 const express = require('express');
 const phoneAdminController = require('../controllers/phoneAdminController');
 const upload = require('../middleware/uploadMiddleware');
+const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // Phone Management Routes (Admin)
-router.post('/admin/phones', upload.single('image'), phoneAdminController.createPhone);
-router.get('/admin/phones', phoneAdminController.getAllPhones);
-router.get('/admin/phones/:id', phoneAdminController.getPhoneById);
-router.get('/admin/phones/:id/image', phoneAdminController.getPhoneImage);
-router.put('/admin/phones/:id', upload.single('image'), phoneAdminController.updatePhone);
-router.delete('/admin/phones/:id', phoneAdminController.deletePhone);
+// Routes are mounted at /api/phones/admin, so use / as base
+router.post('/', verifyToken, isAdmin, upload.single('image'), phoneAdminController.createPhone);
+router.get('/', verifyToken, isAdmin, phoneAdminController.getAllPhones);
+router.get('/:id', verifyToken, isAdmin, phoneAdminController.getPhoneById);
+// Image endpoint remains public for previews
+router.get('/:id/image', phoneAdminController.getPhoneImage);
+router.put('/:id', verifyToken, isAdmin, upload.single('image'), phoneAdminController.updatePhone);
+router.delete('/:id', verifyToken, isAdmin, phoneAdminController.deletePhone);
 
 module.exports = router;

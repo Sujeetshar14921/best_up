@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Smartphone, Zap, BarChart3, Menu, X, GitCompare, Search } from 'lucide-react'
+import SearchSuggestions from './SearchSuggestions'
+import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
+  const { isAuthenticated, user, logout } = useAuth()
 
   const isActive = (path) => location.pathname === path
 
@@ -18,6 +21,11 @@ export default function Header() {
             <span className="text-orange-600">Up</span>
           </div>
         </Link>
+
+        {/* Search Component - Hidden on small screens */}
+        <div className="hidden lg:flex flex-1 max-w-sm">
+          <SearchSuggestions />
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2">
@@ -40,6 +48,23 @@ export default function Header() {
               {label}
             </Link>
           ))}
+
+          {isAuthenticated ? (
+            <>
+              <span className="px-3 py-2 text-sm text-gray-700">Hi, {user?.name?.split(' ')[0] || 'User'}</span>
+              <button
+                onClick={logout}
+                className="px-4 py-2 rounded-lg text-gray-700 hover:bg-yellow-50 transition-all"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="px-4 py-2 rounded-lg text-gray-700 hover:bg-yellow-50 transition-all">Login</Link>
+              <Link to="/signup" className="px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-md transition-all">Sign Up</Link>
+            </>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -76,6 +101,35 @@ export default function Header() {
                   {label}
                 </Link>
               ))}
+
+              {isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    logout()
+                    setIsMenuOpen(false)
+                  }}
+                  className="block px-4 py-2 rounded-lg text-left text-gray-700 hover:bg-yellow-50 transition-all"
+                >
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-2 rounded-lg transition-all text-gray-700 hover:bg-yellow-50"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-2 rounded-lg transition-all text-gray-700 hover:bg-yellow-50"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </div>

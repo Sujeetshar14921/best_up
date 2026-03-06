@@ -11,8 +11,9 @@ import LoginPage from './pages/LoginPage'
 
 function AdminLayout() {
   const { admin } = useAdmin()
+  const hasToken = Boolean(localStorage.getItem('adminToken'))
 
-  if (!admin) {
+  if (!admin || !hasToken) {
     return <LoginPage />
   }
 

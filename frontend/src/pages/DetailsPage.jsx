@@ -4,6 +4,9 @@ import { ArrowLeft, Zap, Camera, Battery, Smartphone, Share2, Heart, Star, Cpu, 
 import { usePhones } from '../context/PhoneContext'
 import LoadingError from '../components/LoadingError'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_ROOT = API.replace(/\/api\/?$/, '')
+
 export default function DetailsPage() {
   const { slug } = useParams()
   const { loading, error } = usePhones()
@@ -13,7 +16,7 @@ export default function DetailsPage() {
   useEffect(() => {
     const fetchPhone = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/phones/${slug}`)
+        const response = await fetch(`${API}/phones/${slug}`)
         const data = await response.json()
         setPhone(data.data || data)
       } catch (err) {
@@ -56,7 +59,7 @@ export default function DetailsPage() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-400 blur-3xl opacity-20 rounded-full"></div>
                   <img
-                    src={`http://localhost:5000/api/phones/admin/phones/${phone._id}/image`}
+                    src={`${API_ROOT}/api/phones/admin/phones/${phone._id}/image`}
                     alt={phone.name}
                     className="relative max-w-sm h-auto rounded-3xl shadow-2xl"
                     onError={(e) => {

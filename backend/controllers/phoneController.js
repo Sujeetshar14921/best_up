@@ -86,7 +86,24 @@ const getPhones = asyncHandler(async (req, res) => {
  * @access  Public
  */
 const getPhoneBySlug = asyncHandler(async (req, res) => {
-  const phone = await Phone.findOne({ slug: req.params.slug });
+  const { slug } = req.params;
+
+  // Try to find by slug first
+  let phone = await Phone.findOne({ slug: slug.toLowerCase() });
+
+  // If not found by slug, try to find by name (case-insensitive)
+  if (!phone) {
+    const nameFromSlug = slug.replace(/-/g, ' ').toLowerCase();
+    phone = await Phone.findOne({
+      name: { $regex: nameFromSlug, $options: 'i' }
+    });
+  }
+
+  // If still not found, try MongoDB ObjectId in case someone passes an ID
+  if (!phone && slug.match(/^[0-9a-fA-F]{24}$/)) {
+    const mongoose = require('mongoose');
+    phone = await Phone.findById(new mongoose.Types.ObjectId(slug));
+  }
 
   if (!phone) {
     res.status(404);

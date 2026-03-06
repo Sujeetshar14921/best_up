@@ -10,14 +10,15 @@ const {
   updatePhone,
   deletePhone,
 } = require('../controllers/phoneController');
+const { validate } = require('../middleware/joiValidation');
 
 // ==================== MAIN ROUTES ====================
 
 // GET all phones with filtering, search, pagination
-router.get('/', getPhones);
+router.get('/', validate('searchQuery'), getPhones);
 
 // POST new phone (Admin)
-router.post('/', createPhone);
+router.post('/', validate('phone'), createPhone);
 
 // ==================== SMART RECOMMENDATION ====================
 
@@ -35,7 +36,7 @@ router.get('/compare', comparePhones);
 router.get('/:slug', getPhoneBySlug);
 
 // PUT update phone by slug
-router.put('/:slug', updatePhone);
+router.put('/:slug', validate('phone'), updatePhone);
 
 // DELETE phone by slug
 router.delete('/:slug', deletePhone);

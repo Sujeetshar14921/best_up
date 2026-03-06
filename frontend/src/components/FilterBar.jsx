@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Search, Filter, X } from 'lucide-react'
 import axios from 'axios'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 export default function FilterBar({ onFilterChange, onSearch, initialFilters = {}, initialSearch = '' }) {
   const [showFilters, setShowFilters] = useState(false)
   const [allBrands, setAllBrands] = useState([])
@@ -39,7 +41,7 @@ export default function FilterBar({ onFilterChange, onSearch, initialFilters = {
 
   const fetchBrandsData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/brands')
+      const response = await axios.get(`${API}/brands`)
       const brandNames = response.data.data?.map(b => b.name) || []
       setAllBrands(brandNames)
     } catch (err) {

@@ -17,6 +17,7 @@ const phoneSchema = new mongoose.Schema(
       type: String,
       unique: true,
       lowercase: true,
+      sparse: true, // Allow null values for unique index
     },
 
     // ==================== IMAGE STORAGE ====================
@@ -199,10 +200,23 @@ phoneSchema.index({ createdAt: -1 });
 // ==================== PRE-SAVE HOOKS ====================
 
 // Auto-generate slug from name and brand
-phoneSchema.pre('save', function () {
+phoneSchema.pre('save', async function () {
   // Auto-generate slug
-  if (!this.slug) {
-    this.slug = `${this.name}-${this.brand}`.toLowerCase().replace(/\s+/g, '-');
+  if (!this.slug && this.name) {
+    let slug = `${this.name} ${this.brand}`.toLowerCase().replace(/[\s&]+/g, '-').replace(/--+/g, '-').replace(/^-|-$/g, '');
+    
+    // Check if slug already exists and make it unique if needed
+    let baseSlug = slug;
+    let counter = 1;
+    let existingPhone = await this.constructor.findOne({ slug: slug, _id: { $ne: this._id } });
+    
+    while (existingPhone) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+      existingPhone = await this.constructor.findOne({ slug: slug, _id: { $ne: this._id } });
+    }
+    
+    this.slug = slug;
   }
 
   // Initialize scores with defaults if not provided

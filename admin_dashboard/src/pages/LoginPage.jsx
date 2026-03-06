@@ -103,9 +103,9 @@ export default function LoginPage() {
 
           {/* Demo Credentials */}
           <div className="bg-light p-4 rounded-lg">
-            <p className="text-xs font-semibold text-gray-600 mb-2">Demo Credentials:</p>
-            <p className="text-xs text-gray-500">Email: admin@bestup.com</p>
-            <p className="text-xs text-gray-500">Password: admin123</p>
+            <p className="text-xs font-semibold text-gray-600 mb-2">Login Help:</p>
+            <p className="text-xs text-gray-500">Use the admin email/password configured in backend `.env`.</p>
+            <p className="text-xs text-gray-500">If login fails, run `npm run seed` in `backend` once.</p>
           </div>
         </div>
       </div>

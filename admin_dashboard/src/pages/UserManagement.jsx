@@ -3,7 +3,7 @@ import { useAdmin } from '../context/AdminContext'
 import { Edit2, Trash2, Shield, AlertCircle } from 'lucide-react'
 
 export default function UserManagement() {
-  const { users, fetchUsers, updateUserRole, deactivateUser, deleteUser, loading, error } = useAdmin()
+  const { users, fetchUsers, updateUserRole, deactivateUser, activateUser, deleteUser, loading, error } = useAdmin()
 
   useEffect(() => {
     fetchUsers()
@@ -17,12 +17,16 @@ export default function UserManagement() {
     }
   }
 
-  const handleDeactivate = async (id) => {
-    if (window.confirm('Are you sure you want to deactivate this user?')) {
+  const handleToggleActive = async (id, isActive) => {
+    if (window.confirm(`Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this user?`)) {
       try {
-        await deactivateUser(id)
+        if (isActive) {
+          await deactivateUser(id)
+        } else {
+          await activateUser(id)
+        }
       } catch (err) {
-        console.error('Failed to deactivate:', err)
+        console.error('Failed to update status:', err)
       }
     }
   }
@@ -95,9 +99,9 @@ export default function UserManagement() {
                 <td className="px-6 py-3">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleDeactivate(user._id)}
-                      className="p-2 bg-warning text-white rounded-lg hover:bg-orange-600 transition-colors"
-                      title="Deactivate"
+                      onClick={() => handleToggleActive(user._id, user.isActive)}
+                      className={`p-2 text-white rounded-lg transition-colors ${user.isActive ? 'bg-warning hover:bg-orange-600' : 'bg-success hover:bg-green-600'}`}
+                      title={user.isActive ? 'Deactivate' : 'Activate'}
                     >
                       <Shield size={16} />
                     </button>

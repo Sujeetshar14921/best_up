@@ -3,6 +3,14 @@ import axios from 'axios'
 import { Trash2, Edit, Plus, ChevronDown, ChevronUp, X } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_ROOT = API_URL.replace(/\/api\/?$/, '')
+
+const getAuthConfig = () => {
+  const token = localStorage.getItem('adminToken')
+  return token
+    ? { headers: { Authorization: `Bearer ${token}` } }
+    : {}
+}
 
 export default function PhoneManagement( ) {
   const [phones, setPhones] = useState([])
@@ -12,6 +20,9 @@ export default function PhoneManagement( ) {
   const [imagePreview, setImagePreview] = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [expandedPhone, setExpandedPhone] = useState(null)
+
+  const [error, setError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -53,11 +64,23 @@ export default function PhoneManagement( ) {
   const fetchPhones = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/admin/phones`)
-      setPhones(response.data.data || [])
+      setError(null)
+      console.log(`📱 Fetching phones from ${API_URL}/phones/admin`)
+      const response = await axios.get(`${API_URL}/phones/admin`, getAuthConfig())
+      console.log('✅ API Response:', response.data)
+      const fetchedPhones = response.data.data || response.data || []
+      setPhones(Array.isArray(fetchedPhones) ? fetchedPhones : [])
+      console.log(`✅ Loaded ${fetchedPhones.length} phones`)
     } catch (error) {
-      console.error('Error fetching phones:', error)
-      alert('Failed to fetch phones')
+      console.error('❌ Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url
+      })
+      setError(`Failed to fetch phones: ${error.response?.status === 0 ? 'Cannot reach backend server' : error.message}`)
+      setPhones([])
     } finally {
       setLoading(false)
     }
@@ -194,10 +217,10 @@ export default function PhoneManagement( ) {
       }
 
       if (editingId) {
-        await axios.put(`${API_URL}/admin/phones/${editingId}`, data)
+        await axios.put(`${API_URL}/phones/admin/${editingId}`, data, getAuthConfig())
         alert('Phone updated successfully!')
       } else {
-        await axios.post(`${API_URL}/admin/phones`, data)
+        await axios.post(`${API_URL}/phones/admin`, data, getAuthConfig())
         alert('Phone created successfully!')
       }
 
@@ -205,6 +228,9 @@ export default function PhoneManagement( ) {
       resetForm()
     } catch (error) {
       console.error('❌ Error:', error)
+      if (error.response?.status === 401) {
+        setError('Session expired or unauthorized. Please login again.')
+      }
       const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message
       alert('Error: ' + errorMsg)
     } finally {
@@ -254,7 +280,7 @@ export default function PhoneManagement( ) {
       }
     })
     if (phone.imageId) {
-      setImagePreview(`http://localhost:5000/api/phones/admin/phones/${phone._id}/image`)
+      setImagePreview(`${API_ROOT}/api/phones/admin/${phone._id}/image`)
     }
     setEditingId(phone._id)
     setShowForm(true)
@@ -263,7 +289,7 @@ export default function PhoneManagement( ) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure?')) {
       try {
-        await axios.delete(`${API_URL}/admin/phones/${id}`)
+        await axios.delete(`${API_URL}/phones/admin/${id}`, getAuthConfig())
         alert('Phone deleted!')
         fetchPhones()
       } catch (error) {
@@ -287,6 +313,34 @@ export default function PhoneManagement( ) {
           Add Phone
         </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex justify-between items-center">
+          <div>
+            <strong>Error:</strong> {error}
+          </div>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex justify-between items-center">
+          <div>{successMessage}</div>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="text-green-600 hover:text-green-800"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg mb-6 max-h-96 overflow-y-auto">
