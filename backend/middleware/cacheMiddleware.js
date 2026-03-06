@@ -16,6 +16,11 @@ const cacheMiddleware = (req, res, next) => {
     return next();
   }
 
+  // Never cache authenticated requests (admin/user-specific data can become stale).
+  if (req.headers.authorization) {
+    return next();
+  }
+
   const cacheKey = getCacheKey(req);
   const cachedData = cache.get(cacheKey);
 

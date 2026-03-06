@@ -13,6 +13,11 @@ const sendImagePlaceholder = (res) => {
   res.send(placeholderSvg)
 }
 
+const invalidatePhoneCaches = () => {
+  clearCache('/api/phones');
+  clearCache('/api/analytics');
+};
+
 // Create phone with image upload
 exports.createPhone = asyncHandler(async (req, res) => {
   try {
@@ -180,8 +185,8 @@ exports.createPhone = asyncHandler(async (req, res) => {
     
     console.log('✅ Phone created successfully:', phone._id);
 
-    // Ensure homepage analytics reflect admin changes immediately.
-    clearCache('/api/analytics');
+    // Ensure admin and public lists reflect changes immediately.
+    invalidatePhoneCaches();
 
     res.status(201).json({
       success: true,
@@ -382,8 +387,8 @@ exports.updatePhone = asyncHandler(async (req, res) => {
 
     console.log('✅ Phone updated successfully:', phone._id);
 
-    // Ensure homepage analytics reflect admin changes immediately.
-    clearCache('/api/analytics');
+    // Ensure admin and public lists reflect changes immediately.
+    invalidatePhoneCaches();
 
     res.status(200).json({
       success: true,
@@ -435,6 +440,6 @@ exports.deletePhone = asyncHandler(async (req, res) => {
       message: 'Phone deleted successfully',
     });
 
-    // Ensure homepage analytics reflect admin changes immediately.
-    clearCache('/api/analytics');
+    // Ensure admin and public lists reflect changes immediately.
+    invalidatePhoneCaches();
 });
