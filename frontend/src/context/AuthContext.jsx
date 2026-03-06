@@ -8,12 +8,19 @@ const TOKEN_KEY = 'bestup_token'
 
 const normalizeUser = (data) => {
   if (!data) return null
-  return data.user || data.data || null
+
+  // Support multiple API shapes: { user }, { data: user }, { data: { user } }
+  if (data.user) return data.user
+  if (data.data?.user) return data.data.user
+  if (data.data && typeof data.data === 'object') return data.data
+  return null
 }
 
 const normalizeToken = (data) => {
   if (!data) return null
-  return data.token || null
+
+  // Support token at top level, inside data, or inside user payload.
+  return data.token || data.data?.token || data.user?.token || data.data?.user?.token || null
 }
 
 export const AuthProvider = ({ children }) => {

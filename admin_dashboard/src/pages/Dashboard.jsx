@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAdmin } from '../context/AdminContext'
 import { BarChart3, Users, Package } from 'lucide-react'
 import AdminAnalytics from '../components/AdminAnalytics'
@@ -104,9 +105,9 @@ export default function Dashboard() {
           <p className="text-gray-600 text-sm mb-4">
             Add, edit, and delete brands with their logos and details.
           </p>
-          <a href="/admin/brands" className="text-primary font-semibold hover:underline">
+          <Link to="/brands" className="text-primary font-semibold hover:underline">
             Go to Brands →
-          </a>
+          </Link>
         </div>
 
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
@@ -114,9 +115,9 @@ export default function Dashboard() {
           <p className="text-gray-600 text-sm mb-4">
             Control user roles, activate/deactivate, and remove users.
           </p>
-          <a href="/admin/users" className="text-primary font-semibold hover:underline">
+          <Link to="/users" className="text-primary font-semibold hover:underline">
             Go to Users →
-          </a>
+          </Link>
         </div>
       </div>
     </div>

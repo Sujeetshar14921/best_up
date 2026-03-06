@@ -29,7 +29,7 @@ export default function LoginPage() {
     try {
       const success = await loginAdmin(formData.email, formData.password)
       if (success) {
-        navigate('/admin')
+        navigate('/')
       } else {
         setError('Invalid credentials or not an admin account')
       }

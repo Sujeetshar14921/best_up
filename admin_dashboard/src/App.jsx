@@ -23,11 +23,12 @@ function AdminLayout() {
       <main className="flex-1 overflow-auto">
         <div className="p-6">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/brands" element={<BrandManagement />} />
-            <Route path="/users" element={<UserManagement />} />
-            <Route path="/phones" element={<PhoneManagement />} />
-            <Route path="/banners" element={<BannerManagement />} />
+            <Route index element={<Dashboard />} />
+            <Route path="brands" element={<BrandManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="phones" element={<PhoneManagement />} />
+            <Route path="banners" element={<BannerManagement />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </main>
@@ -38,10 +39,10 @@ function AdminLayout() {
 export default function App() {
   return (
     <AdminProvider>
-      <Router>
+      <Router basename="/admin">
         <Routes>
-          <Route path="/admin/*" element={<AdminLayout />} />
-          <Route path="/" element={<Navigate to="/admin" />} />
+          <Route path="/*" element={<AdminLayout />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AdminProvider>

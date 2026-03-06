@@ -12,11 +12,11 @@ export default function Sidebar() {
   const isActive = (path) => location.pathname === path
 
   const menuItems = [
-    { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/admin/brands', label: 'Brands', icon: Package },
-    { path: '/admin/phones', label: 'Phones', icon: Smartphone },
-    { path: '/admin/banners', label: 'Banners', icon: Image },
-    { path: '/admin/users', label: 'Users', icon: Users },
+    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/brands', label: 'Brands', icon: Package },
+    { path: '/phones', label: 'Phones', icon: Smartphone },
+    { path: '/banners', label: 'Banners', icon: Image },
+    { path: '/users', label: 'Users', icon: Users },
   ]
 
   return (
