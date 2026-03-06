@@ -21,6 +21,17 @@ export const AdminProvider = ({ children }) => {
 
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
+  const postWithFallback = useCallback(async (primaryPath, fallbackPath, payload) => {
+    try {
+      return await axios.post(`${API}${primaryPath}`, payload)
+    } catch (err) {
+      if (err?.response?.status === 404 && fallbackPath) {
+        return axios.post(`${API}${fallbackPath}`, payload)
+      }
+      throw err
+    }
+  }, [API])
+
   // Restore admin from localStorage on mount
   useEffect(() => {
     const storedAdmin = localStorage.getItem('admin')
@@ -69,7 +80,7 @@ export const AdminProvider = ({ children }) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await axios.post(`${API}/users/login`, { email, password })
+      const response = await postWithFallback('/users/login', '/auth/login', { email, password })
       const token = response.data.token || response.data.data?.token || response.data.user?.token || null
       const user = response.data.data || response.data.user || null
 
@@ -89,12 +100,13 @@ export const AdminProvider = ({ children }) => {
         return false
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed')
+      const message = err.response?.data?.message || err.response?.data?.error || 'Login failed'
+      setError(message)
       return false
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [postWithFallback])
 
   const logoutAdmin = useCallback(() => {
     setAdmin(null)
