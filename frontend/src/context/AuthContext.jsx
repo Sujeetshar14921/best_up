@@ -6,6 +6,16 @@ const AuthContext = createContext()
 const USER_KEY = 'bestup_user'
 const TOKEN_KEY = 'bestup_token'
 
+const normalizeUser = (data) => {
+  if (!data) return null
+  return data.user || data.data || null
+}
+
+const normalizeToken = (data) => {
+  if (!data) return null
+  return data.token || null
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
@@ -49,8 +59,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register({ name, email, password })
       const data = response.data || {}
-      const nextUser = data.user || null
-      const nextToken = data.token || null
+      let nextUser = normalizeUser(data)
+      let nextToken = normalizeToken(data)
+
+      // Legacy /users/register response may not include token.
+      // In that case, immediately login with the same credentials.
+      if (!nextToken) {
+        const loginResponse = await authAPI.login({ email, password })
+        const loginData = loginResponse.data || {}
+        nextUser = normalizeUser(loginData)
+        nextToken = normalizeToken(loginData)
+      }
 
       if (!nextUser || !nextToken) {
         throw new Error('Invalid registration response from server')
@@ -73,8 +92,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login({ email, password })
       const data = response.data || {}
-      const nextUser = data.user || null
-      const nextToken = data.token || null
+      const nextUser = normalizeUser(data)
+      const nextToken = normalizeToken(data)
 
       if (!nextUser || !nextToken) {
         throw new Error('Invalid login response from server')

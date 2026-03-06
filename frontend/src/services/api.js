@@ -9,6 +9,17 @@ const api = axios.create({
   }
 })
 
+const postWithFallback = async (primaryPath, fallbackPath, payload) => {
+  try {
+    return await api.post(primaryPath, payload)
+  } catch (err) {
+    if (err?.response?.status === 404 && fallbackPath) {
+      return api.post(fallbackPath, payload)
+    }
+    throw err
+  }
+}
+
 export const setApiAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`
@@ -53,8 +64,8 @@ export const phonesAPI = {
 }
 
 export const authAPI = {
-  register: (payload) => api.post('/auth/register', payload),
-  login: (payload) => api.post('/auth/login', payload),
+  register: (payload) => postWithFallback('/auth/register', '/users/register', payload),
+  login: (payload) => postWithFallback('/auth/login', '/users/login', payload),
   forgotPassword: (payload) => api.post('/auth/forgot-password', payload),
   resetPassword: (payload) => api.post('/auth/reset-password', payload),
   getMe: () => api.get('/auth/me')
