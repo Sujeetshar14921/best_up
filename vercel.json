@@ -8,48 +8,19 @@
       "dest": "backend/server.js"
     },
     {
-      "src": "/admin/assets/(.*)",
-      "dest": "frontend/dist/admin/assets/$1"
-    },
-    {
-      "src": "/admin/(.*\\.js)",
-      "dest": "frontend/dist/admin/$1"
-    },
-    {
-      "src": "/admin/(.*\\.css)",
-      "dest": "frontend/dist/admin/$1"
-    },
-    {
-      "src": "/admin/(.*\\.svg)",
-      "dest": "frontend/dist/admin/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/admin",
-      "dest": "frontend/dist/admin/index.html"
+      "dest": "/admin/index.html"
     },
     {
       "src": "/admin/(.*)",
-      "dest": "frontend/dist/admin/index.html"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "frontend/dist/assets/$1"
-    },
-    {
-      "src": "/(.*\\.js)",
-      "dest": "frontend/dist/$1"
-    },
-    {
-      "src": "/(.*\\.css)",
-      "dest": "frontend/dist/$1"
-    },
-    {
-      "src": "/(.*\\.svg)",
-      "dest": "frontend/dist/$1"
+      "dest": "/admin/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
