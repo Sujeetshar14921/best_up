@@ -27,6 +27,21 @@ const bannerSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    flipkartLink: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    amazonLink: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    officialWebsiteLink: {
+      type: String,
+      trim: true,
+      default: null
+    },
     position: {
       type: String,
       enum: ['horizontal', 'vertical', 'hero'],

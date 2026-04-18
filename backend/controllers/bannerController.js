@@ -83,7 +83,7 @@ const getBannerImage = asyncHandler(async (req, res) => {
 
 // Create banner
 const createBanner = asyncHandler(async (req, res) => {
-  const { title, description, imageUrl, linkUrl, position, isActive } = req.body
+  const { title, description, imageUrl, linkUrl, flipkartLink, amazonLink, officialWebsiteLink, position, isActive } = req.body
 
   if (!title) {
     return res.status(400).json({
@@ -139,6 +139,9 @@ const createBanner = asyncHandler(async (req, res) => {
     imageName: imageName || null,
     imageUrl: imageUrl || null,
     linkUrl,
+    flipkartLink: flipkartLink || null,
+    amazonLink: amazonLink || null,
+    officialWebsiteLink: officialWebsiteLink || null,
     position: position || 'horizontal',
     isActive: isActive !== 'false'
   })
@@ -157,7 +160,7 @@ const createBanner = asyncHandler(async (req, res) => {
 
 // Update banner
 const updateBanner = asyncHandler(async (req, res) => {
-  const { title, description, imageUrl, linkUrl, position, isActive } = req.body
+  const { title, description, imageUrl, linkUrl, flipkartLink, amazonLink, officialWebsiteLink, position, isActive } = req.body
 
   let banner = await Banner.findById(req.params.id)
   if (!banner) {
@@ -215,6 +218,9 @@ const updateBanner = asyncHandler(async (req, res) => {
   if (title) banner.title = title
   if (description !== undefined) banner.description = description
   if (linkUrl !== undefined) banner.linkUrl = linkUrl
+  if (flipkartLink !== undefined) banner.flipkartLink = flipkartLink || null
+  if (amazonLink !== undefined) banner.amazonLink = amazonLink || null
+  if (officialWebsiteLink !== undefined) banner.officialWebsiteLink = officialWebsiteLink || null
   if (position) banner.position = position
   if (isActive !== undefined) banner.isActive = isActive !== 'false'
 

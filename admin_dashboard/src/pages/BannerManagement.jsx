@@ -22,6 +22,9 @@ export default function BannerManagement() {
     imageUrl: '',
     imagePreview: '',
     linkUrl: '',
+    flipkartLink: '',
+    amazonLink: '',
+    officialWebsiteLink: '',
     position: 'horizontal',
     isActive: true
   })
@@ -56,6 +59,9 @@ export default function BannerManagement() {
         imageUrl: banner.imageUrl,
         imagePreview: banner.imageUrl,
         linkUrl: banner.linkUrl,
+        flipkartLink: banner.flipkartLink || '',
+        amazonLink: banner.amazonLink || '',
+        officialWebsiteLink: banner.officialWebsiteLink || '',
         position: banner.position,
         isActive: banner.isActive
       })
@@ -68,6 +74,9 @@ export default function BannerManagement() {
         imageUrl: '',
         imagePreview: '',
         linkUrl: '',
+        flipkartLink: '',
+        amazonLink: '',
+        officialWebsiteLink: '',
         position: 'horizontal',
         isActive: true
       })
@@ -85,6 +94,9 @@ export default function BannerManagement() {
       imageUrl: '',
       imagePreview: '',
       linkUrl: '',
+      flipkartLink: '',
+      amazonLink: '',
+      officialWebsiteLink: '',
       position: 'horizontal',
       isActive: true
     })
@@ -142,6 +154,9 @@ export default function BannerManagement() {
       submitData.append('title', formData.title)
       submitData.append('description', formData.description)
       submitData.append('linkUrl', formData.linkUrl)
+      submitData.append('flipkartLink', formData.flipkartLink)
+      submitData.append('amazonLink', formData.amazonLink)
+      submitData.append('officialWebsiteLink', formData.officialWebsiteLink)
       submitData.append('position', formData.position)
       submitData.append('isActive', formData.isActive)
       
@@ -252,8 +267,6 @@ export default function BannerManagement() {
                   <span className={`px-2 py-1 rounded ${
                     banner.position === 'horizontal'
                       ? 'bg-blue-500'
-                      : banner.position === 'vertical'
-                      ? 'bg-yellow-500'
                       : 'bg-purple-500'
                   }`}>
                     {banner.position}
@@ -311,7 +324,7 @@ export default function BannerManagement() {
               {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Title *
+                  Title * {formData.position === 'hero' && <span className="text-xs text-gray-500">(Not displayed in Hero Section)</span>}
                 </label>
                 <input
                   type="text"
@@ -327,7 +340,7 @@ export default function BannerManagement() {
               {/* Description */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Description
+                  Description {formData.position === 'hero' && <span className="text-xs text-gray-500">(Not displayed in Hero Section)</span>}
                 </label>
                 <textarea
                   name="description"
@@ -395,7 +408,7 @@ export default function BannerManagement() {
               {/* Link URL */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Link URL
+                  Link URL {formData.position === 'hero' && <span className="text-xs text-gray-500">(Not used in Hero Section)</span>}
                 </label>
                 <input
                   type="url"
@@ -405,6 +418,60 @@ export default function BannerManagement() {
                   placeholder="https://example.com"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 />
+              </div>
+
+              {/* Product Links - Important for Hero Section */}
+              <div className={formData.position === 'hero' ? 'p-3 bg-blue-50 rounded-lg border border-blue-200' : ''}>
+                {formData.position === 'hero' && (
+                  <p className="text-xs text-blue-700 mb-3 font-semibold">
+                    ⚡ Important: Product links are the main call-to-action buttons displayed at the bottom center of hero banners. At least one link is recommended.
+                  </p>
+                )}
+
+              {/* Flipkart Link */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Flipkart Link
+                </label>
+                <input
+                  type="url"
+                  name="flipkartLink"
+                  value={formData.flipkartLink}
+                  onChange={handleInputChange}
+                  placeholder="https://flipkart.com/..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+
+              {/* Amazon Link */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Amazon Link
+                </label>
+                <input
+                  type="url"
+                  name="amazonLink"
+                  value={formData.amazonLink}
+                  onChange={handleInputChange}
+                  placeholder="https://amazon.in/..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+
+              {/* Official Website Link */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Official Website
+                </label>
+                <input
+                  type="url"
+                  name="officialWebsiteLink"
+                  value={formData.officialWebsiteLink}
+                  onChange={handleInputChange}
+                  placeholder="https://official.com/..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
               </div>
 
               {/* Position */}
@@ -418,10 +485,14 @@ export default function BannerManagement() {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 >
-                  <option value="horizontal">Horizontal</option>
-                  <option value="vertical">Vertical</option>
-                  <option value="hero">Hero Section</option>
+                  <option value="horizontal">Horizontal (Title, Description, Call to Action)</option>
+                  <option value="hero">Hero Section (Full Width - Product Links Only)</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.position === 'hero' 
+                    ? '✓ Hero banners display image + product link buttons (F, A, Globe) only at bottom center' 
+                    : '✓ Horizontal banners display on grid with title, description and call-to-action button'}
+                </p>
               </div>
 
               {/* Active Status */}

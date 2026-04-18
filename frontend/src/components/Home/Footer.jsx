@@ -5,11 +5,9 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-gradient-to-b from-gray-900 to-black text-white mt-20 border-t border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        {/* Main Footer Content */}
+    <footer className="bg-gradient-to-b from-gray-900 to-black text-white mt-20 border-t border-gray-800 w-screen px-0">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
-          {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-0 mb-4">
               <span className="text-2xl font-bold text-yellow-500">Best</span>
@@ -25,28 +23,25 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
             <h4 className="font-bold text-white mb-4 text-lg">Quick Links</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="/" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Home</a></li>
-              <li><a href="/phones" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> All Phones</a></li>
-              <li><a href="/compare" className="text-gray-400 hover:text-orange-400 transition-colors flex items-center gap-2"><span className="text-orange-400">→</span> Compare</a></li>
+              <li><a href="/" className="text-gray-400 hover:text-orange-400 transition-colors">Home</a></li>
+              <li><a href="/phones" className="text-gray-400 hover:text-orange-400 transition-colors">All Phones</a></li>
+              <li><a href="/compare" className="text-gray-400 hover:text-orange-400 transition-colors">Compare</a></li>
             </ul>
           </div>
 
-          {/* Features */}
           <div>
             <h4 className="font-bold text-white mb-4 text-lg">Features</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> AI Recommendations</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> Phone Comparison</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> Detailed Specs</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors flex items-center gap-2"><span className="text-yellow-400">★</span> Price Tracking</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">AI Recommendations</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">Phone Comparison</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">Detailed Specs</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">Price Tracking</a></li>
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
             <h4 className="font-bold text-white mb-4 text-lg">Get in Touch</h4>
             <ul className="space-y-3 text-sm">
@@ -66,7 +61,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Stats Section */}
         <div className="grid grid-cols-3 gap-4 md:gap-8 py-8 border-y border-gray-800 mb-8">
           <div className="text-center">
             <div className="text-2xl md:text-3xl font-bold text-yellow-400">500+</div>
@@ -82,14 +76,12 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
           <p>&copy; {currentYear} <span className="text-yellow-400">Best</span><span className="text-orange-400">Up</span>. All rights reserved.</p>
           <div className="flex gap-6 mt-4 md:mt-0 flex-wrap justify-center">
             <a href="#" className="hover:text-orange-400 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-orange-400 transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-orange-400 transition-colors">Cookie Policy</a>
-            <a href="#" className="hover:text-orange-400 transition-colors">Sitemap</a>
           </div>
         </div>
       </div>

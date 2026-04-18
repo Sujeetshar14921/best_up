@@ -189,6 +189,26 @@ const phoneSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+
+    // ==================== SHOPPING LINKS ====================
+    flipkartLink: {
+      type: String,
+      trim: true,
+      default: null,
+      description: 'Flipkart purchase link'
+    },
+    amazonLink: {
+      type: String,
+      trim: true,
+      default: null,
+      description: 'Amazon purchase link'
+    },
+    officialWebsiteLink: {
+      type: String,
+      trim: true,
+      default: null,
+      description: 'Official brand website link'
+    },
   },
   {
     timestamps: true,
@@ -200,6 +220,8 @@ phoneSchema.index({ brand: 1 });
 phoneSchema.index({ basePrice: 1 });
 phoneSchema.index({ 'scores.gaming': -1 });
 phoneSchema.index({ 'scores.camera': -1 });
+phoneSchema.index({ 'scores.battery': -1 });
+phoneSchema.index({ 'scores.display': -1 });
 phoneSchema.index({ 'scores.valueForMoney': -1 });
 phoneSchema.index({ name: 'text', brand: 'text', slug: 'text' }); // Full-text search
 phoneSchema.index({ createdAt: -1 });

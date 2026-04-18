@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
+import ProductLinksButtons from './Buttons/ProductLinksButtons'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const API_ROOT = API.replace(/\/api\/?$/, '')
@@ -40,117 +41,39 @@ export function HeroBannersSection() {
   }
 
   return (
-    <section className="px-4 pt-6 pb-8 bg-white">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <section className="mt-1 bg-white">
+      <div className="space-y-6">
         {heroBanners.map((banner) => (
           <a
             key={banner._id}
             href={banner.linkUrl || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative overflow-hidden rounded-3xl block min-h-[340px] md:min-h-[430px] shadow-xl hover:shadow-2xl transition-all duration-300"
+            className="group relative overflow-hidden block min-h-[500px] md:min-h-[600px] lg:min-h-[700px] transition-all duration-300 w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]"
           >
             <img
               src={resolveBannerImageUrl(banner.imageUrl)}
               alt={banner.title}
               className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
-                e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22520%22%3E%3Crect fill=%22%23e5e7eb%22 width=%221280%22 height=%22520%22/%3E%3C/svg%3E'
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221280%22 height=%22700%22%3E%3Crect fill=%22%23e5e7eb%22 width=%221280%22 height=%22700%22/%3E%3C/svg%3E'
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/20" />
-            <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-yellow-400/20 blur-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent" />
+            <div className="absolute inset-0" />
 
-            <div className="relative z-10 h-full p-8 md:p-12 flex items-end">
-              <div className="max-w-2xl text-white">
-                <p className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-500 mb-4 tracking-wide uppercase">
-                  Limited Time Offer
-                </p>
-                <h2 className="text-3xl md:text-5xl font-black leading-tight drop-shadow-lg">{banner.title}</h2>
-                {banner.description && (
-                  <p className="mt-4 text-sm md:text-lg text-white/95 max-w-xl">{banner.description}</p>
-                )}
-                <div className="mt-6 flex items-center gap-3">
-                  <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-yellow-400 text-black font-bold group-hover:bg-yellow-300 transition-colors">
-                    Shop Now <span aria-hidden="true">→</span>
-                  </span>
-                  <span className="text-xs md:text-sm font-semibold text-white/90">Trusted Deals</span>
-                </div>
+            <div className="relative z-10 h-full p-8 md:p-12 flex flex-col items-center justify-end">
+              {/* Bottom Section - Product Links Centered */}
+              <div className="w-full flex justify-center">
+                <ProductLinksButtons
+                  flipkartLink={banner.flipkartLink}
+                  amazonLink={banner.amazonLink}
+                  officialWebsiteLink={banner.officialWebsiteLink}
+                />
               </div>
             </div>
           </a>
         ))}
-      </div>
-    </section>
-  )
-}
-
-// Component to display vertical banners (shown at top)
-export function VerticalBannersSection() {
-  const [verticalBanners, setVerticalBanners] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchBanners()
-    const interval = setInterval(fetchBanners, 30000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const fetchBanners = async () => {
-    try {
-      const response = await axios.get(`${API}/banners`, {
-        params: { _t: Date.now() }
-      })
-      const banners = response.data.data || []
-      setVerticalBanners(banners.filter(b => b.position === 'vertical' && b.isActive))
-    } catch (err) {
-      console.error('Error fetching banners:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading || verticalBanners.length === 0) {
-    return null
-  }
-
-  return (
-    <section className="py-8 px-4 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {verticalBanners.map(banner => (
-            <a
-              key={banner._id}
-              href={banner.linkUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-2xl transition-all duration-300 block h-[420px] shadow-lg hover:shadow-2xl border border-gray-100 hover:border-yellow-400 transform group-hover:scale-[1.02] group-hover:-translate-y-1"
-            >
-              <img
-                src={resolveBannerImageUrl(banner.imageUrl)}
-                alt={banner.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22%3E%3Crect fill=%22%23e5e7eb%22 width=%22300%22 height=%22400%22/%3E%3C/svg%3E'
-                }}
-              />
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent transition-all duration-300 flex flex-col items-end justify-between p-5">
-                <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg transition-all uppercase tracking-wide">
-                  Ad
-                </div>
-                <div className="text-white text-end">
-                  <h3 className="font-bold text-xl line-clamp-2 mb-2 group-hover:text-yellow-300 transition-colors">{banner.title}</h3>
-                  {banner.description && <p className="text-sm mt-1 line-clamp-3 text-gray-200">{banner.description}</p>}
-                  <div className="flex items-center justify-end gap-1 mt-3">
-                    <span className="text-sm font-semibold bg-yellow-400 text-black px-3 py-1 rounded-md">Buy</span>
-                    <span className="text-lg">→</span>
-                  </div>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
       </div>
     </section>
   )
@@ -187,23 +110,23 @@ export function HorizontalBannersSection() {
 
   return (
     <section className="py-8 px-4 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto">
           {horizontalBanners.map(banner => (
             <a
               key={banner._id}
               href={banner.linkUrl || '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-2xl transition-all duration-300 block shadow-lg hover:shadow-2xl border border-gray-100 hover:border-yellow-400 transform group-hover:scale-[1.02] group-hover:-translate-y-1"
+              className="group relative overflow-hidden transition-all duration-300 block shadow-lg hover:shadow-2xl border border-gray-100 hover:border-yellow-400 transform group-hover:scale-[1.02] group-hover:-translate-y-1"
             >
-              <div className="relative h-52 bg-gradient-to-br from-gray-200 to-gray-300">
+              <div className="relative h-80 bg-gradient-to-br from-gray-200 to-gray-300">
                 <img
                   src={resolveBannerImageUrl(banner.imageUrl)}
                   alt={banner.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22150%22%3E%3Crect fill=%22%23e5e7eb%22 width=%22400%22 height=%22150%22/%3E%3C/svg%3E'
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22320%22%3E%3Crect fill=%22%23e5e7eb%22 width=%22400%22 height=%22320%22/%3E%3C/svg%3E'
                   }}
                 />
                 {/* Overlay */}
@@ -231,7 +154,6 @@ export default function BannerDisplay() {
   return (
     <>
       <HeroBannersSection />
-      <VerticalBannersSection />
     </>
   )
 }

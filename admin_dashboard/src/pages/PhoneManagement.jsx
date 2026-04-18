@@ -37,6 +37,9 @@ export default function PhoneManagement( ) {
     launchDate: '',
     pros: [],
     cons: [],
+    flipkartLink: '',
+    amazonLink: '',
+    officialWebsiteLink: '',
     image: null,
     variants: [{ ram: 8, storage: 128, color: 'Black', price: 0, sku: '', availability: true, stock: 0 }],
     specs: {
@@ -100,6 +103,9 @@ export default function PhoneManagement( ) {
       recommended: false,
       pros: [],
       cons: [],
+      flipkartLink: '',
+      amazonLink: '',
+      officialWebsiteLink: '',
       image: null,
       variants: [{ ram: 8, storage: 128, color: 'Black', price: 0, sku: '', availability: true, stock: 0 }],
       specs: {
@@ -217,6 +223,9 @@ export default function PhoneManagement( ) {
       data.append('launchDate', formData.launchDate || '')
       data.append('pros', JSON.stringify(formData.pros || []))
       data.append('cons', JSON.stringify(formData.cons || []))
+      data.append('flipkartLink', formData.flipkartLink || '')
+      data.append('amazonLink', formData.amazonLink || '')
+      data.append('officialWebsiteLink', formData.officialWebsiteLink || '')
       data.append('specs', JSON.stringify(formData.specs || {}))
       data.append('scores', JSON.stringify(formData.scores || {}))
       data.append('variants', JSON.stringify(formData.variants || []))
@@ -284,6 +293,9 @@ export default function PhoneManagement( ) {
       launchDate: phone.launchDate || '',
       pros: phone.pros || [],
       cons: phone.cons || [],
+      flipkartLink: phone.flipkartLink || '',
+      amazonLink: phone.amazonLink || '',
+      officialWebsiteLink: phone.officialWebsiteLink || '',
       image: null,
       variants: phone.variants || [{ ram: 8, storage: 128, color: 'Black', price: 0, sku: '', availability: true, stock: 0 }],
       specs: { ...defaultSpecs, ...(phone.specs || {}) },
@@ -463,6 +475,38 @@ export default function PhoneManagement( ) {
                 />
                 <span className="font-semibold text-gray-800">Show in Home Trending section (Admin Control)</span>
               </label>
+            </div>
+
+            {/* Shopping Links Section */}
+            <div className="col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                🛍️ Shopping Links
+              </h3>
+              <p className="text-xs text-gray-600 mb-3">Add product links so users can directly purchase from these platforms</p>
+              <input
+                type="url"
+                name="flipkartLink"
+                placeholder="Flipkart Link (e.g., https://www.flipkart.com/...)"
+                value={formData.flipkartLink}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-blue-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="url"
+                name="amazonLink"
+                placeholder="Amazon Link (e.g., https://www.amazon.in/...)"
+                value={formData.amazonLink}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-blue-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="url"
+                name="officialWebsiteLink"
+                placeholder="Official Website Link (e.g., https://www.samsung.com/...)"
+                value={formData.officialWebsiteLink}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
 

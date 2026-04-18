@@ -77,7 +77,7 @@ exports.createPhone = asyncHandler(async (req, res) => {
     console.log('📥 Request body keys:', Object.keys(req.body))
     console.log('📥 Received file:', req.file ? `${req.file.fieldname} - ${req.file.size} bytes` : 'No file')
     
-    const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, recommended, specs, variants, scores, pros, cons } = req.body;
+    const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, recommended, specs, variants, scores, pros, cons, flipkartLink, amazonLink, officialWebsiteLink } = req.body;
 
     console.log('📥 Extracted fields:', { name, brand, basePrice, variantsLength: typeof variants })
 
@@ -234,6 +234,9 @@ exports.createPhone = asyncHandler(async (req, res) => {
       cons: parsedCons || [],
       imageId: imageId || null,
       imageName: imageName || null,
+      flipkartLink: flipkartLink || null,
+      amazonLink: amazonLink || null,
+      officialWebsiteLink: officialWebsiteLink || null,
     });
     
     console.log('✅ Phone created successfully:', phone._id);
@@ -342,7 +345,7 @@ exports.getPhoneImage = asyncHandler(async (req, res) => {
 // Update phone
 exports.updatePhone = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, recommended, specs, variants, scores, pros, cons } = req.body;
+  const { name, brand, basePrice, overview, releaseDate, isUpcoming, launchDate, recommended, specs, variants, scores, pros, cons, flipkartLink, amazonLink, officialWebsiteLink } = req.body;
 
   console.log('📝 Updating phone:', id);
   console.log('📝 Update body keys:', Object.keys(req.body));
@@ -356,6 +359,9 @@ exports.updatePhone = asyncHandler(async (req, res) => {
     isUpcoming: isUpcoming === 'true' || isUpcoming === true || false,
     launchDate: launchDate || null,
     recommended: recommended === 'true' || recommended === true,
+    flipkartLink: flipkartLink || null,
+    amazonLink: amazonLink || null,
+    officialWebsiteLink: officialWebsiteLink || null,
   };
 
   // Handle specs update

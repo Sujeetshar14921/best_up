@@ -12,6 +12,8 @@ const nodemailer = require('nodemailer');
 exports.register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.validatedData;
 
+  
+  
   // Check if user already exists
   let user = await User.findOne({ email });
   if (user) {

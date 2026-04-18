@@ -80,12 +80,12 @@ export default function PriceSegmentAnalysis() {
 
   if (loading) {
     return (
-      <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="h-12 bg-gray-200 rounded-lg mb-8 animate-pulse"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="py-12 md:py-16 px-0 w-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="h-8 md:h-12 bg-gray-200 rounded-lg mb-6 md:mb-8 animate-pulse"></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-40 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div key={i} className="h-32 md:h-40 bg-gray-200 rounded-lg animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -94,25 +94,25 @@ export default function PriceSegmentAnalysis() {
   }
 
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-12 md:py-16 px-0 w-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-3">
-            <BarChart3 size={32} className="text-blue-600" />
-            <h2 className="text-4xl font-bold text-gray-900">Price Segments</h2>
+        <div className="mb-8 md:mb-12">
+          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+            <BarChart3 size={28} className="text-blue-600" />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Price Segments</h2>
           </div>
-          <p className="text-gray-600 text-lg">Find the perfect phone in your budget</p>
+          <p className="text-gray-600 text-base md:text-lg">Find the perfect phone in your budget</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8 text-red-700">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 md:p-4 mb-6 md:mb-8 text-red-700 text-sm md:text-base">
             {error}
           </div>
         )}
 
         {/* Segments Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {SEGMENTS.map(segment => {
             const data = segments?.[segment.name]
             const phonesCount = data?.count || 0
@@ -121,48 +121,48 @@ export default function PriceSegmentAnalysis() {
             return (
               <Link
                 key={segment.name}
-                to={`/phones?minPrice=0&maxPrice=${segment.maxPrice}`}
+                to={`/?search=${segment.name}#explore-phones`}
               >
-                <div className={`group bg-gradient-to-br ${segment.color} p-6 rounded-2xl text-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer min-h-60 flex flex-col`}>
+                <div className={`group bg-gradient-to-br ${segment.color} p-3 md:p-6 rounded-2xl text-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer min-h-48 md:min-h-60 flex flex-col`}>
                   {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-2 md:mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold">{segment.icon}</h3>
-                      <p className="text-lg font-bold mt-1">{segment.name}</p>
+                      <h3 className="text-xl md:text-2xl font-bold">{segment.icon}</h3>
+                      <p className="text-sm md:text-lg font-bold mt-0.5 md:mt-1">{segment.name}</p>
                     </div>
                   </div>
 
                   {/* Range */}
-                  <p className="text-sm text-white/80 mb-4">{segment.range}</p>
+                  <p className="text-xs md:text-sm text-white/80 mb-2 md:mb-4">{segment.range}</p>
 
                   {/* Stats */}
-                  <div className="space-y-3 flex-1">
+                  <div className="space-y-2 md:space-y-3 flex-1">
                     {phonesCount > 0 ? (
                       <>
-                        <div className="bg-white/20 backdrop-blur p-3 rounded-lg">
-                          <p className="text-sm text-white/80">Available Phones</p>
-                          <p className="text-3xl font-bold">{phonesCount}</p>
+                        <div className="bg-white/20 backdrop-blur p-2 md:p-3 rounded-lg">
+                          <p className="text-xs md:text-sm text-white/80">Available Phones</p>
+                          <p className="text-2xl md:text-3xl font-bold">{phonesCount}</p>
                         </div>
                         
-                        <div className="bg-white/20 backdrop-blur p-3 rounded-lg">
-                          <p className="text-sm text-white/80">Avg Rating</p>
-                          <div className="flex items-end gap-2 mt-1">
-                            <p className="text-2xl font-bold">{avgScore.toFixed(1)}</p>
-                            <p className="text-sm text-white/80">/10</p>
+                        <div className="bg-white/20 backdrop-blur p-2 md:p-3 rounded-lg">
+                          <p className="text-xs md:text-sm text-white/80">Avg Rating</p>
+                          <div className="flex items-end gap-1 md:gap-2 mt-0.5 md:mt-1">
+                            <p className="text-xl md:text-2xl font-bold">{avgScore.toFixed(1)}</p>
+                            <p className="text-xs md:text-sm text-white/80">/10</p>
                           </div>
                         </div>
                       </>
                     ) : (
-                      <div className="bg-white/20 backdrop-blur p-3 rounded-lg text-center">
-                        <p className="text-white/80">No phones in this segment</p>
+                      <div className="bg-white/20 backdrop-blur p-2 md:p-3 rounded-lg text-center">
+                        <p className="text-xs md:text-sm text-white/80">No phones in this segment</p>
                       </div>
                     )}
                   </div>
 
                   {/* Footer */}
-                  <div className="mt-4 pt-4 border-t border-white/20 flex items-center gap-2 group-hover:gap-3 transition-all">
-                    <span className="text-sm font-semibold">Explore</span>
-                    <TrendingUp size={18} />
+                  <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-white/20 flex items-center gap-1 md:gap-2 group-hover:gap-2 md:group-hover:gap-3 transition-all">
+                    <span className="text-xs md:text-sm font-semibold">Explore</span>
+                    <TrendingUp size={16} />
                   </div>
                 </div>
               </Link>
@@ -171,12 +171,12 @@ export default function PriceSegmentAnalysis() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-12 bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
-          <div className="flex gap-4">
-            <Smartphone size={24} className="text-blue-600 flex-shrink-0" />
+        <div className="mt-8 md:mt-12 bg-blue-50 border-l-4 border-blue-500 p-4 md:p-6 rounded-lg">
+          <div className="flex gap-3 md:gap-4">
+            <Smartphone size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-gray-900 mb-2">Tips for Choosing</h4>
-              <ul className="text-gray-700 space-y-1 text-sm">
+              <h4 className="font-bold text-gray-900 mb-2 text-sm md:text-base">Tips for Choosing</h4>
+              <ul className="text-gray-700 space-y-1 text-xs md:text-sm">
                 <li>✓ Budget: Perfect for daily use and essential features</li>
                 <li>✓ Mid-Range: Great balance of features and price</li>
                 <li>✓ Premium: Advanced features and better cameras</li>
