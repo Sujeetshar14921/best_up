@@ -10,7 +10,7 @@ export default function CTASection() {
   }
 
   return (
-    <section className="py-12 md:py-20 px-3 md:px-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-orange-600 text-white relative overflow-hidden">
+    <section className="py-12 md:py-20 px-3 md:px-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-orange-600 text-white relative overflow-hidden rounded-2xl mx-9">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -top-96 -right-96 w-full h-full rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)' }}></div>
       </div>

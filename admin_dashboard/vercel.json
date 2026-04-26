@@ -1,7 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "VITE_API_URL=https://best-up.onrender.com/api npm run vercel-build",
   "outputDirectory": "dist",
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  },
   "routes": [
     {
       "src": "^/admin$",
